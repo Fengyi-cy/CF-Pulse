@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cloudflare 节点优选控制台 (Pro)</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CF优选测速">
+  <meta name="theme-color" content="#f59e0b">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", Roboto, sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(160, 160, 160, 0.25);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(160, 160, 160, 0.45);
+    }
+  </style>
+</head>
+<body class="bg-slate-50/90 text-slate-800 min-h-screen antialiased flex flex-col selection:bg-amber-500 selection:text-white">
+
+  <!-- 顶部状态栏 -->
+  <header class="bg-white/85 backdrop-blur border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 flex items-center justify-center text-white shadow-sm font-bold text-base tracking-tight">
+          CF
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-bold text-slate-900 leading-none text-base">CloudflareSpeedTest</h1>
+            <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 mono">PRO</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">全功能本地优选控制台 · 零磁盘残留</p>
+        </div>
+      </div>
+      
+      <!-- 运行计时与控制状态 -->
+      <div class="flex items-center space-x-3">
+        <div id="timer-badge" class="hidden text-xs mono px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">
+          ⏱️ 耗时: <span id="timer-val">00:00</span>
+        </div>
+        <span id="status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> 就绪
+        </span>
+        <button id="btn-stop" onclick="stopTest()" class="hidden px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-medium transition active:scale-95">
+          停止测速
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主容器 -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6 flex-1 w-full">
+
+    <!-- 顶层功能选项卡切换 -->
+    <div class="flex items-center space-x-2 border-b border-slate-200/80 pb-3">
+      <button id="tab-btn-cdn" onclick="switchMainTab('cdn')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-amber-500 text-white shadow-xs cursor-pointer">
+        <span>⚡ CDN 边缘节点优选</span>
+      </button>
+      <button id="tab-btn-proxyip" onclick="switchMainTab('proxyip')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer">
+        <span>🛡️ ProxyIP (反代出站) 智能优选</span>
+        <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 mono">PRO</span>
+      </button>
+      <button id="tab-btn-inspector" onclick="switchMainTab('inspector')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer">
+        <span>🔍 节点双出站与质量体检</span>
+        <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 mono">NEW</span>
+      </button>
+    </div>
+
+    <!-- CDN 模块面板 -->
+    <div id="panel-cdn" class="space-y-6">
+      <!-- 主配置面板 -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-6">
+      
+      <!-- 第一部分：核心优选条件 -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
+              <span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+              第一步：选择目标机房与测速方式
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5">指定期望连通的数据中心地理区域与测速深度</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- 1. 目标机房区域 (跨 7 列) -->
+          <div class="lg:col-span-7 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700">数据中心地区 (Region / IATA Code)</label>
+              <span class="text-[11px] text-slate-400">通俗：服务器离国内越近，网络跳数越少延迟越低</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="region-chips">
+              <button type="button" onclick="selectRegion('SJC,LAX,SFO,SEA', this)" class="region-btn active px-3 py-2 text-xs font-medium rounded-xl border border-amber-500 bg-amber-50 text-amber-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇺🇸 美西机房</div>
+                  <div class="text-[10px] opacity-75">SJC/LAX/SFO</div>
+                </div>
+                <span class="text-[9px] px-1 py-0.5 rounded bg-amber-200/70 text-amber-800 font-bold">首选</span>
+              </button>
+
+              <button type="button" onclick="selectRegion('SJC,LAX,SFO,SEA,ORD,DFW,IAD,JFK,EWR', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇺🇸 美国全境</div>
+                  <div class="text-[10px] text-slate-400">全美主流数据中心</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="selectRegion('HKG', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇭🇰 中国香港</div>
+                  <div class="text-[10px] text-slate-400">HKG 亚太核心</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="selectRegion('NRT,HND,KIX', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇯🇵 日本</div>
+                  <div class="text-[10px] text-slate-400">东京/大阪</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="selectRegion('TPE,KHH', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇹🇼 中国台湾</div>
+                  <div class="text-[10px] text-slate-400">台北/高雄</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="selectRegion('SIN', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇸🇬 新加坡</div>
+                  <div class="text-[10px] text-slate-400">SIN 东南亚枢纽</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="selectRegion('FRA,LHR,AMS', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🇪🇺 欧洲全境</div>
+                  <div class="text-[10px] text-slate-400">德英荷机房</div>
+                </div>
+              </button>
+
+              <button type="button" onclick="selectRegion('ALL', this)" class="region-btn px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 flex items-center justify-between text-left transition">
+                <div>
+                  <div class="font-semibold">🌐 全球不限</div>
+                  <div class="text-[10px] text-slate-400">任意可用机房</div>
+                </div>
+              </button>
+            </div>
+
+            <!-- 自定义输入 -->
+            <div class="pt-1">
+              <input type="text" id="custom-region" value="SJC,LAX,SFO,SEA" placeholder="自定义机场三字码 (英文逗号隔开，如 SJC,LAX)" class="w-full text-xs mono px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 text-slate-700 bg-slate-50/50">
+            </div>
+          </div>
+
+          <!-- 2. 优选模式选择 (跨 5 列) -->
+          <div class="lg:col-span-5 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700">优选方式 (Speedtest Mode)</label>
+              <span class="text-[11px] text-slate-400">通俗：要极速出结果还是测极限带宽</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 h-[88px]">
+              <label class="cursor-pointer h-full">
+                <input type="radio" name="speed-mode" value="latency_only" checked class="sr-only peer">
+                <div class="h-full p-3 rounded-xl border border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:bg-slate-50 transition flex flex-col justify-center">
+                  <div class="text-xs font-bold text-slate-900 flex items-center">
+                    <span class="mr-1">⚡</span> 仅测延迟
+                  </div>
+                  <div class="text-[11px] text-slate-500 mt-1 leading-snug">
+                    跳过耗时的大文件下载，十几秒即可筛选出极速且 0 丢包节点。
+                  </div>
+                </div>
+              </label>
+
+              <label class="cursor-pointer h-full">
+                <input type="radio" name="speed-mode" value="full" class="sr-only peer">
+                <div class="h-full p-3 rounded-xl border border-slate-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 hover:bg-slate-50 transition flex flex-col justify-center">
+                  <div class="text-xs font-bold text-slate-900 flex items-center">
+                    <span class="mr-1">🚀</span> 全面优选
+                  </div>
+                  <div class="text-[11px] text-slate-500 mt-1 leading-snug">
+                    测延迟 + 真实并发下载测速，精确测出每个 IP 的真实宽带速度。
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+              <span class="text-slate-600">候选 IP 采样规模</span>
+              <select id="sample-count" class="text-xs px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-amber-500">
+                <option value="50">⚡ 极速抽样：50 个 IP (~8秒)</option>
+                <option value="150" selected>✨ 标准优选：150 个 IP (~15秒，推荐)</option>
+                <option value="300">🔍 深度优选：300 个 IP (~30秒)</option>
+                <option value="600">🎯 强力优选：600 个 IP (~1分钟)</option>
+                <option value="0">🌐 全量扫描：全部 5,955 个 IP (耗时较长)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第二部分：高级专业配置 (折叠面板) -->
+      <div class="border-t border-slate-100 pt-4">
+        <button type="button" onclick="toggleAdvancedSettings()" class="w-full flex items-center justify-between text-xs font-semibold text-slate-600 hover:text-slate-900 py-1 transition">
+          <span class="flex items-center">
+            <svg id="adv-icon" class="w-4 h-4 mr-1.5 text-amber-500 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            高级专业配置 (端口切换 · IPv6 双栈 · 线程控制 · 过滤门槛)
+          </span>
+          <span class="text-[11px] text-amber-600 font-normal">点击展开/折叠</span>
+        </button>
+
+        <div id="advanced-panel" class="hidden mt-4 pt-4 border-t border-slate-100/80 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- 1. 协议栈 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                <span>IP 协议栈 (IP Stack)</span>
+              </label>
+              <select id="ip-version" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                <option value="ipv4" selected>IPv4 协议 (默认通用)</option>
+                <option value="ipv6">IPv6 协议 (纯净少干扰)</option>
+              </select>
+              <p class="text-[10px] text-slate-400">通俗：家庭宽带若支持 IPv6，切 IPv6 往往人少速度奇高</p>
+            </div>
+
+            <!-- 2. 端口选择 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                <span>测速端口 (Port Selection)</span>
+              </label>
+              <select id="conn-port" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                <option value="443" selected>443 (默认标准 HTTPS)</option>
+                <option value="8443">8443 (备用高防 HTTPS)</option>
+                <option value="2053">2053 (备用 HTTPS 端口)</option>
+                <option value="2083">2083 (备用 HTTPS 端口)</option>
+                <option value="80">80 (标准 HTTP 端口)</option>
+                <option value="8080">8080 (备用 HTTP 端口)</option>
+              </select>
+              <p class="text-[10px] text-slate-400">通俗：443 偶尔被运营商干扰，切换 8443 等端口常能提速</p>
+            </div>
+
+            <!-- 3. 并发线程数 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700">并发线程数 (Threads: -n)</label>
+              <select id="thread-count" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                <option value="100">100 线程 (弱网/防路由器丢包)</option>
+                <option value="200" selected>200 线程 (标准平衡，推荐)</option>
+                <option value="300">300 线程 (性能强机极速扫)</option>
+                <option value="500">500 线程 (极限狂飙扫描)</option>
+              </select>
+              <p class="text-[10px] text-slate-400">通俗：并发探测的管道数量，越大测得越快</p>
+            </div>
+
+            <!-- 4. 单 IP 探测频次 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700">探测频次 (Ping Count: -t)</label>
+              <select id="ping-count" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                <option value="1">1 次 (极速出结果，轻微误差)</option>
+                <option value="2">2 次 (平衡模式)</option>
+                <option value="4" selected>4 次 (默认最稳，能测出丢包)</option>
+                <option value="6">6 次 (极限稳定性验证)</option>
+              </select>
+              <p class="text-[10px] text-slate-400">通俗：每个 IP 连几次取平均值，4 次最能过滤偶发抖动</p>
+            </div>
+
+            <!-- 5. 下载测速时长 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700">下载测速窗口 (Duration: -dt)</label>
+              <select id="download-time" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                <option value="5">5 秒 (快速粗测)</option>
+                <option value="10" selected>10 秒 (标准推荐，测准带宽)</option>
+                <option value="15">15 秒 (深度压测)</option>
+              </select>
+              <p class="text-[10px] text-slate-400">通俗：单 IP 测速秒数，太短测不准，10秒最均衡</p>
+            </div>
+
+            <!-- 6. 最终保留数量 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700">最终选留数量 (Limit)</label>
+              <select id="limit-count" onchange="updateDisplayLimit()" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+                <option value="5">选留 5 个节点</option>
+                <option value="10" selected>选留 10 个节点 (推荐)</option>
+                <option value="20">选留 20 个节点</option>
+                <option value="50">选留 50 个节点</option>
+              </select>
+              <p class="text-[10px] text-slate-400">通俗：结果表格与一键复制最终截取的最佳 IP 数量</p>
+            </div>
+
+            <!-- 7. 延迟上限 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700">延迟上限 (Max Latency: -tl)</label>
+              <input type="number" id="max-delay" value="" placeholder="留空不限制 (推荐)" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+              <p class="text-[10px] text-slate-400">通俗：建议留空！按相对最低延迟自动排序，避免误杀好 IP</p>
+            </div>
+
+            <!-- 8. 最低下载速度 -->
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-700">下载速度下限 (Min Speed: -sl)</label>
+              <input type="number" id="min-speed" value="" placeholder="例如 5 (单位 MB/s)" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+              <p class="text-[10px] text-slate-400">通俗：仅在全面模式生效，只收录达标带宽的 IP</p>
+            </div>
+
+          </div>
+
+          <!-- 自定义测速源 -->
+          <div class="pt-2">
+            <label class="text-xs font-semibold text-slate-700 mb-1 block">自定义测速源 URL (Custom Download Object: -url)</label>
+            <input type="text" id="custom-url" placeholder="留空使用作者默认高速源 (自建可填: https://your-domain.com/speedtest.zip)" class="w-full text-xs mono px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30">
+            <p class="text-[10px] text-slate-400 mt-1">通俗：如果您有自己套了 Cloudflare CDN 的网站或特定文件，填入这里测出的带宽最贴合您的真实业务场景。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 启动按钮 -->
+      <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div class="text-xs text-slate-500 flex items-center space-x-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>内存计算 · 无本地残留文件 · 原生并发内核已就绪</span>
+        </div>
+        <button id="btn-start" onclick="startTest()" class="w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 active:scale-98">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>立即开始优选测速</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 结果展示区域 -->
+    <div id="result-container" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      
+      <!-- 结果卡片头部：多样化快捷复制工具栏 -->
+      <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 bg-gradient-to-r from-slate-50/90 to-white">
+        <div>
+          <div class="flex items-center space-x-2">
+            <h2 class="text-base font-bold text-slate-900">优选结果列表</h2>
+            <span id="result-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 mono">0 个节点</span>
+            <span id="cached-indicator" class="hidden text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200">上次历史记忆</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">结果实时呈现在前端内存中，支持一键多格式复制导入</p>
+        </div>
+
+        <!-- 丰富的一键复制工具箱 -->
+        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <!-- 核心：一键复制纯 IP -->
+          <button id="btn-copy-all" onclick="copyFormat('plain')" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-xs flex items-center justify-center space-x-1.5 transition active:scale-95">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+            <span id="copy-btn-text">一键复制纯 IP (每行一个)</span>
+          </button>
+
+          <!-- 进阶：复制 IP:Port -->
+          <button onclick="copyFormat('port')" title="复制为 104.16.1.1:443 格式，方便直接贴入各类代理软件" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition active:scale-95">
+            复制 IP:端口
+          </button>
+
+          <!-- 进阶：复制 IP:Port#备注 -->
+          <button onclick="copyFormat('remark')" title="复制为 104.16.1.1:443#美西SJC-168ms 格式" class="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition active:scale-95">
+            带机房备注
+          </button>
+
+          <!-- 导出文件 -->
+          <div class="flex items-center space-x-1">
+            <button onclick="exportFile('csv')" title="直接下载 CSV 表格" class="px-2.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition">
+              CSV
+            </button>
+            <button onclick="toggleRawView()" class="px-2.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition">
+              文本抽屉
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 搜索过滤条 -->
+      <div id="filter-bar" class="hidden px-5 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-2 flex-1 max-w-xs">
+          <span class="text-slate-400">🔍 过滤节点:</span>
+          <input type="text" id="filter-input" oninput="filterResults()" placeholder="输入 IP 或机房码 (如 SJC) 实时筛选" class="w-full text-xs px-2.5 py-1 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-amber-500">
+        </div>
+        <span id="filter-count" class="text-slate-400 text-[11px]"></span>
+      </div>
+
+      <!-- 纯文本抽屉 -->
+      <div id="raw-view" class="hidden p-4 bg-slate-900 border-b border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-slate-400">纯文本一览（一竖排排列，已自动选中，可按快捷键 Cmd+C）：</span>
+          <button onclick="copyRawTextarea()" class="text-xs text-amber-400 hover:text-amber-300">复制文本框内容</button>
+        </div>
+        <textarea id="raw-ip-textarea" readonly rows="6" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs mono text-amber-200 focus:outline-none select-all"></textarea>
+      </div>
+
+      <!-- 表格内容 -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50/80 text-slate-500 font-semibold border-b border-slate-100 uppercase tracking-wider">
+            <tr>
+              <th class="py-3 px-4 w-12 text-center">排名</th>
+              <th class="py-3 px-4">优选 IP 地址</th>
+              <th class="py-3 px-4">数据中心 / 地区</th>
+              <th class="py-3 px-4">平均延迟 (Ping)</th>
+              <th class="py-3 px-4">丢包率</th>
+              <th class="py-3 px-4">实测下载速度 (带宽换算)</th>
+              <th class="py-3 px-4 text-center">操作</th>
+            </tr>
+          </thead>
+          <tbody id="result-tbody" class="divide-y divide-slate-100 text-slate-700 font-normal">
+            <tr>
+              <td colspan="7" class="py-14 text-center text-slate-400">
+                <div class="max-w-xs mx-auto space-y-2">
+                  <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                  </div>
+                  <p class="font-medium text-slate-600">暂无测速数据</p>
+                  <p class="text-xs text-slate-400 leading-relaxed">配置好地区与模式后，点击“立即开始优选测速”，测试完毕后将自动展示最优节点并支持快捷复制。</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- 实时终端日志 -->
+    <div class="bg-slate-950 text-slate-200 rounded-2xl border border-slate-800 shadow-sm overflow-hidden">
+      <div class="px-4 py-2.5 bg-slate-900 border-b border-slate-800/80 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+          <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+          <span class="ml-2 text-xs font-mono text-slate-400">Live Console Output</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button onclick="clearLogs()" class="text-[11px] text-slate-400 hover:text-slate-200 transition">清空日志</button>
+        </div>
+      </div>
+      <div id="log-console" class="p-4 mono text-xs leading-relaxed max-h-52 overflow-y-auto space-y-1 text-slate-300 select-text">
+        <div class="text-slate-500">// 控制台已就绪，等待下发测速任务...</div>
+      </div>
+    </div>
+
+    </div> <!-- /panel-cdn -->
+
+    <!-- ProxyIP 模块面板 -->
+    <div id="panel-proxyip" class="space-y-6 hidden">
+      
+      <!-- 简介横幅 -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase mono border border-emerald-500/30">VLESS / Workers / Pages 专供</span>
+            <span class="text-xs text-slate-400">· 彻底解决 522 / 1000 报错与流媒体解锁</span>
+          </div>
+          <h2 class="text-base sm:text-lg font-bold">Cloudflare ProxyIP 智能反代测速与筛选引擎</h2>
+          <p class="text-xs text-slate-300 max-w-2xl">
+            通过原生 TLS 探针直连候选节点，探测握手延迟并验证 Cloudflare 反向代理特征，精准解析归属数据中心 (Colo)，助您挑选最强出站落地。
+          </p>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0">
+          <button type="button" onclick="fetchProxyIPSources()" id="btn-sync-sources" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/10 transition flex items-center space-x-1.5 cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span id="btn-sync-text">同步云端最新反代库</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 主配置面板 -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-6">
+        
+        <!-- 第一步：候选源模式 -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center mb-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+            第一步：选择候选 ProxyIP 来源
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="cursor-pointer border border-emerald-500 bg-emerald-50/40 rounded-xl p-4 flex items-start space-x-3 transition proxy-src-card" id="card-src-cloud">
+              <input type="radio" name="proxyip-src-type" value="cloud" checked onchange="toggleProxySrc('cloud')" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+              <div class="space-y-1">
+                <div class="text-xs font-bold text-slate-900 flex items-center space-x-2">
+                  <span>🌐 全网云端聚合池</span>
+                  <span id="badge-cloud-count" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-200/80 text-emerald-800 font-bold mono">自动同步</span>
+                </div>
+                <p class="text-[11px] text-slate-500">自动聚合 GitHub 活跃测速源与内置优质节点库（覆盖美西、加拿大、香港、日本等各线 IDC）</p>
+              </div>
+            </label>
+
+            <label class="cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-4 flex items-start space-x-3 transition proxy-src-card" id="card-src-custom">
+              <input type="radio" name="proxyip-src-type" value="custom" onchange="toggleProxySrc('custom')" class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
+              <div class="space-y-1">
+                <div class="text-xs font-bold text-slate-900">✍️ 自定义输入列表</div>
+                <p class="text-[11px] text-slate-500">粘贴您私藏的 VPS 反代 IP 或域名，格式支持每行一个 IP 或 IP:端口</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- 自定义输入文本框（默认折叠） -->
+          <div id="proxyip-custom-box" class="hidden mt-3">
+            <textarea id="proxyip-custom-input" rows="4" placeholder="支持每行输入一个 IP 或 IP:Port&#10;例如：&#10;158.51.123.177:443&#10;172.93.32.237&#10;my-proxy.example.com:8443" class="w-full text-xs mono p-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none bg-slate-50"></textarea>
+          </div>
+        </div>
+
+        <!-- 第二步：优选参数 -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center mb-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+            第二步：筛选机房、端口与并发参数
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- 目标机房 -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700">期望 CF 机房 (Colo)</label>
+              <select id="proxyip-region" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                <option value="ALL">🌐 全球所有机房 (不限)</option>
+                <option value="SJC,LAX,SFO,SEA">🇺🇸 美西机房 (SJC/LAX/SFO/SEA)</option>
+                <option value="HKG,TPE,NRT,SIN">🌏 亚太机房 (HKG/TPE/NRT/SIN)</option>
+                <option value="YYZ,YVR,YUL">🇨🇦 加拿大机房 (YYZ/YVR/YUL)</option>
+                <option value="FRA,LHR,AMS">🇪🇺 欧洲机房 (FRA/LHR/AMS)</option>
+              </select>
+            </div>
+
+            <!-- 目标端口 -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700">反代端口 (TLS Port)</label>
+              <select id="proxyip-port" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none mono">
+                <option value="443" selected>443 (标准 HTTPS)</option>
+                <option value="8443">8443</option>
+                <option value="2053">2053</option>
+                <option value="2083">2083</option>
+                <option value="2087">2087</option>
+                <option value="2096">2096</option>
+              </select>
+            </div>
+
+            <!-- 抽取样本上限 -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700">本轮探测样本数量</label>
+              <select id="proxyip-sample-count" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none">
+                <option value="30">极速体验 (30 个节点)</option>
+                <option value="60" selected>推荐平衡 (60 个节点)</option>
+                <option value="120">深度挑选 (120 个节点)</option>
+                <option value="250">全量大扫描 (250 个节点)</option>
+              </select>
+            </div>
+
+            <!-- 输出精选数 -->
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700">精选保留最佳数量</label>
+              <select id="proxyip-limit-count" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none mono">
+                <option value="5">TOP 5</option>
+                <option value="10" selected>TOP 10 (推荐)</option>
+                <option value="20">TOP 20</option>
+                <option value="50">TOP 50</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 启动与控制按钮 -->
+        <div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <div class="text-xs text-slate-500 flex items-center space-x-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span id="proxyip-source-hint">就绪：已载入 20+ 个内置精选节点</span>
+          </div>
+          <div class="flex items-center space-x-3 w-full sm:w-auto">
+            <button type="button" id="btn-proxyip-stop" onclick="stopProxyIPTest()" class="hidden px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold transition">
+              停止探测
+            </button>
+            <button type="button" id="btn-proxyip-start" onclick="startProxyIPTest()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center space-x-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              <span>开始挑选 ProxyIP</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 实时日志窗 -->
+      <div class="bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-800">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
+          <div class="flex items-center space-x-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+            <span class="font-mono text-slate-300 font-semibold">ProxyIP TLS 探针控制台</span>
+          </div>
+          <button type="button" onclick="clearProxyLogs()" class="text-slate-400 hover:text-white text-[11px] transition">清空日志</button>
+        </div>
+        <div id="proxyip-log-console" class="mt-3 p-2 font-mono text-xs text-slate-300 max-h-48 overflow-y-auto space-y-1 select-text">
+          <div class="text-slate-500">// 点击「开始挑选 ProxyIP」，系统将并发探测 TLS 握手及 Cloudflare trace...</div>
+        </div>
+      </div>
+
+      <!-- 优选结果展示卡片 -->
+      <div id="proxyip-result-card" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+              <span>🏆 ProxyIP 优选结果排名</span>
+              <span id="proxyip-count-badge" class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs mono font-semibold border border-emerald-200">0 个就绪</span>
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">按综合延迟（TCP 建连 + TLS 握手）从低到高升序排列</p>
+          </div>
+          <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+            <button type="button" onclick="copyProxyList('raw')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium transition cursor-pointer">
+              📋 复制 IP:Port
+            </button>
+            <button type="button" onclick="copyProxyList('vless')" class="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-medium transition cursor-pointer">
+              ⚡ 复制 proxyip= 参数
+            </button>
+            <button type="button" onclick="exportProxyCSV()" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium transition cursor-pointer">
+              📥 导出 CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- 结果表格 -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="text-slate-400 border-b border-slate-100 font-medium">
+                <th class="py-2.5 px-3">排名</th>
+                <th class="py-2.5 px-3">Proxy IP (反代地址)</th>
+                <th class="py-2.5 px-3">端口</th>
+                <th class="py-2.5 px-3">CF 归属机房 (Colo)</th>
+                <th class="py-2.5 px-3">国家/地区</th>
+                <th class="py-2.5 px-3 mono">TCP 建连</th>
+                <th class="py-2.5 px-3 mono">TLS 握手</th>
+                <th class="py-2.5 px-3 mono">综合耗时</th>
+                <th class="py-2.5 px-3 text-right">快捷操作</th>
+              </tr>
+            </thead>
+            <tbody id="proxyip-result-tbody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="9" class="text-center py-8 text-slate-400">
+                  暂无测速数据，请点击上方按钮启动测速
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div> <!-- /panel-proxyip -->
+
+    <!-- 节点双出站与质量体检模块面板 -->
+    <div id="panel-inspector" class="space-y-6 hidden">
+
+      <!-- 简介与操作横幅 -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 mono uppercase">DUAL-ROUTE INSPECTOR</span>
+            <span class="text-xs text-slate-400">·</span>
+            <span class="text-xs text-indigo-300 font-medium">双出口与风控深度诊断</span>
+          </div>
+          <h2 class="text-base font-bold text-white tracking-tight">Cloudflare 节点双出站与 IP 质量深度体检</h2>
+          <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+            专为 Cloudflare 节点打造：一键并发探测【非 CF 网站出站 (Worker 默认出口)】与【CF 网站出站 (ProxyIP 反代出口)】，深度评估 IP 纯净度、欺诈分与解锁能力。
+          </p>
+        </div>
+
+        <div class="flex items-center space-x-3 shrink-0">
+          <span id="inspect-status-badge" class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+            <span class="w-2 h-2 rounded-full bg-slate-400 mr-2"></span> 待体检
+          </span>
+          <button id="btn-start-inspect" onclick="startNodeInspection()" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-sm active:scale-95 flex items-center space-x-2 cursor-pointer">
+            <svg id="inspect-spinner" class="hidden w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+            <span id="btn-inspect-text">🚀 一键开始全面体检</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 智能分流诊断横幅 -->
+      <div id="inspect-summary-banner" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
+              <span class="w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>
+              分流拓扑与诊断结论
+            </span>
+          </div>
+          <span id="inspect-timestamp" class="text-[11px] text-slate-400 mono">尚未执行探测</span>
+        </div>
+
+        <div id="inspect-conclusion-box" class="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start space-x-3">
+          <div id="inspect-conclusion-icon" class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 font-bold text-sm">
+            💡
+          </div>
+          <div class="space-y-1">
+            <div id="inspect-conclusion-title" class="text-xs font-bold text-slate-800">准备就绪：请确保客户端已连接您的 CF 节点</div>
+            <div id="inspect-conclusion-desc" class="text-[11px] text-slate-500 leading-relaxed">
+              点击上方“一键开始全面体检”，系统将通过异步双通道探针，同时验证您的节点在请求非 Cloudflare 网站与 Cloudflare 保护网站时的真实出站差异。
+            </div>
+          </div>
+        </div>
+
+        <!-- 拓扑示意图小标签 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <span class="text-[11px] text-slate-500 font-medium">接入入口 (Anycast 边缘)</span>
+            <span id="diag-inbound" class="text-xs font-bold text-slate-700 mono">待探测</span>
+          </div>
+          <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <span class="text-[11px] text-slate-500 font-medium">双出口隔离状态</span>
+            <span id="diag-isolation" class="text-xs font-bold text-slate-700 mono">待比对</span>
+          </div>
+          <div class="p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <span class="text-[11px] text-slate-500 font-medium">出站纯净度均分</span>
+            <span id="diag-score" class="text-xs font-bold text-slate-700 mono">待评估</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 核心双出站对比卡片网格 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        <!-- 卡片 1：非 CF 网站出站 (Worker 默认出口) -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="p-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base shadow-xs">
+                🌐
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
+                  <span>非 Cloudflare 目标出站</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 mono">WORKER 原生</span>
+                </h3>
+                <p class="text-[10px] text-slate-400">访问 Google / YouTube / Twitter / GitHub 等</p>
+              </div>
+            </div>
+            <span id="card-noncf-tag" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600 font-semibold mono">待测</span>
+          </div>
+
+          <div class="p-5 space-y-4 flex-1 flex flex-col justify-between">
+            <!-- IP 地址大号展示与复制 -->
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <div>
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">OUTBOUND IP</div>
+                <div id="val-noncf-ip" class="text-base font-bold text-slate-900 mono mt-0.5">--.--.--.--</div>
+              </div>
+              <button id="btn-copy-noncf-ip" onclick="copyText(document.getElementById('val-noncf-ip').innerText, '已复制非 CF 出口 IP')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition cursor-pointer flex items-center space-x-1 shadow-2xs">
+                <span>📋 复制</span>
+              </button>
+            </div>
+
+            <!-- 详细属性列表 -->
+            <div class="space-y-2.5 text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">地理位置</span>
+                <span id="val-noncf-geo" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">网络归属 (ASN / ISP)</span>
+                <span id="val-noncf-isp" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">网络类型</span>
+                <span id="val-noncf-type" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">反代与代理识别</span>
+                <span id="val-noncf-proxyflag" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+            </div>
+
+            <!-- 风险评估与纯净度进度条 -->
+            <div class="pt-2 border-t border-slate-100 space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">IP 欺诈度 / 风控评分</span>
+                <span id="val-noncf-risk" class="font-bold text-slate-700 mono">-- / 100</span>
+              </div>
+              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div id="bar-noncf-risk" class="h-full bg-slate-300 transition-all duration-500 rounded-full" style="width: 0%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-slate-400">
+                <span>0 分 (极度纯净)</span>
+                <span id="txt-noncf-risk-level">风险度待评估</span>
+                <span>100 分 (黑名单)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片 2：CF 网站出站 (ProxyIP 反代出口) -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="p-4 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base shadow-xs">
+                🛡️
+              </div>
+              <div>
+                <h3 class="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
+                  <span>Cloudflare 目标出站</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 mono">PROXYIP 反代</span>
+                </h3>
+                <p class="text-[10px] text-slate-400">访问 Discord / Notion / 套了 CF CDN 的站点</p>
+              </div>
+            </div>
+            <span id="card-cf-tag" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-600 font-semibold mono">待测</span>
+          </div>
+
+          <div class="p-5 space-y-4 flex-1 flex flex-col justify-between">
+            <!-- IP 地址大号展示与复制 -->
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <div>
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">PROXYIP OUTBOUND</div>
+                <div id="val-cf-ip" class="text-base font-bold text-slate-900 mono mt-0.5">--.--.--.--</div>
+              </div>
+              <button id="btn-copy-cf-ip" onclick="copyText(document.getElementById('val-cf-ip').innerText, '已复制 ProxyIP 出口 IP')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition cursor-pointer flex items-center space-x-1 shadow-2xs">
+                <span>📋 复制</span>
+              </button>
+            </div>
+
+            <!-- 详细属性列表 -->
+            <div class="space-y-2.5 text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">Cloudflare 机房代号 (Colo)</span>
+                <span id="val-cf-colo" class="font-bold text-indigo-600 mono px-2 py-0.5 rounded bg-indigo-50">--</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">地理位置与国家</span>
+                <span id="val-cf-geo" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">网络归属 (ASN / ISP)</span>
+                <span id="val-cf-isp" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+              <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <span class="text-slate-500">网络类型</span>
+                <span id="val-cf-type" class="font-semibold text-slate-800 mono">--</span>
+              </div>
+            </div>
+
+            <!-- 风险评估与纯净度进度条 -->
+            <div class="pt-2 border-t border-slate-100 space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500 font-medium">IP 欺诈度 / 风控评分</span>
+                <span id="val-cf-risk" class="font-bold text-slate-700 mono">-- / 100</span>
+              </div>
+              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div id="bar-cf-risk" class="h-full bg-slate-300 transition-all duration-500 rounded-full" style="width: 0%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-slate-400">
+                <span>0 分 (极度纯净)</span>
+                <span id="txt-cf-risk-level">风险度待评估</span>
+                <span>100 分 (黑名单)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 常用服务连通性与解锁测试矩阵 -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+              关键服务可用性与连通性检测
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">测试当前节点对 AI、流媒体及常用国际服务的连通状态与往返时延</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="service-matrix">
+          
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-base">🌐</span>
+              <span id="svc-status-google" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">待测</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">Google 搜索</div>
+              <div id="svc-latency-google" class="text-[10px] text-slate-400 mono mt-0.5">-- ms</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-base">🤖</span>
+              <span id="svc-status-chatgpt" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">待测</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">OpenAI / GPT</div>
+              <div id="svc-latency-chatgpt" class="text-[10px] text-slate-400 mono mt-0.5">-- ms</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-base">🧠</span>
+              <span id="svc-status-gemini" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">待测</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">Google Gemini</div>
+              <div id="svc-latency-gemini" class="text-[10px] text-slate-400 mono mt-0.5">-- ms</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-base">📺</span>
+              <span id="svc-status-youtube" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">待测</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">YouTube 视频</div>
+              <div id="svc-latency-youtube" class="text-[10px] text-slate-400 mono mt-0.5">-- ms</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-base">💻</span>
+              <span id="svc-status-github" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">待测</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">GitHub 平台</div>
+              <div id="svc-latency-github" class="text-[10px] text-slate-400 mono mt-0.5">-- ms</div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-base">☁️</span>
+              <span id="svc-status-cloudflare" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">待测</span>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800">Cloudflare 边缘</div>
+              <div id="svc-latency-cloudflare" class="text-[10px] text-slate-400 mono mt-0.5">-- ms</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div> <!-- /panel-inspector -->
+
+  </main>
+
+  <!-- 浮层 Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 transform translate-y-16 opacity-0 transition-all duration-300 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 z-50 pointer-events-none">
+    <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    <span id="toast-msg">已复制到剪贴板</span>
+  </div>
+
+  <script>
+    let pollTimer = null;
+    let clockTimer = null;
+    let isTesting = false;
+    let rawAllResults = [];
+    let cachedResults = [];
+    let currentPort = 443;
+    let testStartTime = 0;
+
+    const COLO_MAP = {
+      'SJC': { name: '圣何塞 (硅谷)', flag: '🇺🇸', area: '美西' },
+      'LAX': { name: '洛杉矶', flag: '🇺🇸', area: '美西' },
+      'SFO': { name: '旧金山', flag: '🇺🇸', area: '美西' },
+      'SEA': { name: '西雅图', flag: '🇺🇸', area: '美西' },
+      'ORD': { name: '芝加哥', flag: '🇺🇸', area: '美中' },
+      'DFW': { name: '达拉斯', flag: '🇺🇸', area: '美中' },
+      'IAD': { name: '华盛顿特区', flag: '🇺🇸', area: '美东' },
+      'JFK': { name: '纽约 JFK', flag: '🇺🇸', area: '美东' },
+      'EWR': { name: '纽瓦克', flag: '🇺🇸', area: '美东' },
+      'HKG': { name: '中国香港', flag: '🇭🇰', area: '亚太' },
+      'TPE': { name: '中国台北', flag: '🇹🇼', area: '亚太' },
+      'KHH': { name: '中国高雄', flag: '🇹🇼', area: '亚太' },
+      'NRT': { name: '日本东京成田', flag: '🇯🇵', area: '亚太' },
+      'HND': { name: '日本东京羽田', flag: '🇯🇵', area: '亚太' },
+      'KIX': { name: '日本大阪', flag: '🇯🇵', area: '亚太' },
+      'ICN': { name: '韩国首尔', flag: '🇰🇷', area: '亚太' },
+      'SIN': { name: '新加坡', flag: '🇸🇬', area: '亚太' },
+      'FRA': { name: '德国法兰克福', flag: '🇩🇪', area: '欧洲' },
+      'LHR': { name: '英国伦敦', flag: '🇬🇧', area: '欧洲' },
+      'AMS': { name: '荷兰阿姆斯特丹', flag: '🇳🇱', area: '欧洲' }
+    };
+
+    // 页面载入时尝试恢复历史记录
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const saved = localStorage.getItem('cfst_last_results');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.length > 0) {
+            renderResults(parsed);
+            document.getElementById('cached-indicator').classList.remove('hidden');
+          }
+        }
+      } catch (e) {}
+    });
+
+    function toggleAdvancedSettings() {
+      const p = document.getElementById('advanced-panel');
+      const icon = document.getElementById('adv-icon');
+      p.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    }
+
+    function selectRegion(regionCode, btn) {
+      document.getElementById('custom-region').value = regionCode;
+      document.querySelectorAll('.region-btn').forEach(b => {
+        b.classList.remove('border-amber-500', 'bg-amber-50', 'text-amber-700');
+        b.classList.add('border-slate-200', 'bg-white', 'text-slate-700');
+      });
+      if (btn) {
+        btn.classList.add('border-amber-500', 'bg-amber-50', 'text-amber-700');
+        btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-700');
+      }
+    }
+
+    async function startTest() {
+      const region = document.getElementById('custom-region').value.trim();
+      const mode = document.querySelector('input[name="speed-mode"]:checked').value;
+      const sample_count = document.getElementById('sample-count').value;
+      const limit_count = document.getElementById('limit-count').value;
+      
+      const ip_version = document.getElementById('ip-version').value;
+      const port = document.getElementById('conn-port').value;
+      const threads = document.getElementById('thread-count').value;
+      const ping_count = document.getElementById('ping-count').value;
+      const download_time = document.getElementById('download-time').value;
+      const custom_url = document.getElementById('custom-url').value.trim();
+      const max_delay = document.getElementById('max-delay').value;
+      const min_speed = document.getElementById('min-speed').value;
+
+      currentPort = parseInt(port || 443);
+
+      const payload = {
+        region: region,
+        mode: mode,
+        sample_count: parseInt(sample_count),
+        limit_count: parseInt(limit_count),
+        ip_version: ip_version,
+        port: parseInt(port),
+        threads: parseInt(threads),
+        ping_count: parseInt(ping_count),
+        download_time: parseInt(download_time),
+        custom_url: custom_url,
+        max_delay: parseInt(max_delay || 0),
+        min_speed: parseFloat(min_speed || 0)
+      };
+
+      setTestingState(true);
+      clearLogs();
+      appendLog(`[启动] 准备测速: 协议栈 [${ip_version.toUpperCase()}], 端口 [${port}], 地区 [${region}], 采样 [${sample_count}个]...`);
+
+      try {
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message, true);
+          setTestingState(false);
+        } else {
+          showToast('测速任务已启动！');
+          startPolling();
+        }
+      } catch (err) {
+        showToast('请求失败: ' + err.message, true);
+        setTestingState(false);
+      }
+    }
+
+    async function stopTest() {
+      try {
+        await fetch('/api/stop', { method: 'POST' });
+        showToast('已下发终止指令');
+      } catch (err) {
+        showToast('操作失败: ' + err.message, true);
+      }
+    }
+
+    function setTestingState(testing) {
+      isTesting = testing;
+      const btnStart = document.getElementById('btn-start');
+      const btnStop = document.getElementById('btn-stop');
+      const badge = document.getElementById('status-badge');
+      const timerBadge = document.getElementById('timer-badge');
+
+      if (testing) {
+        testStartTime = Date.now();
+        timerBadge.classList.remove('hidden');
+        clockTimer = setInterval(() => {
+          const sec = Math.floor((Date.now() - testStartTime) / 1000);
+          const m = String(Math.floor(sec / 60)).padStart(2, '0');
+          const s = String(sec % 60).padStart(2, '0');
+          document.getElementById('timer-val').innerText = `${m}:${s}`;
+        }, 1000);
+
+        btnStart.disabled = true;
+        btnStart.classList.add('opacity-50', 'cursor-not-allowed');
+        btnStart.innerHTML = `
+          <svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          <span>正在测速分析中...</span>
+        `;
+        btnStop.classList.remove('hidden');
+        badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200';
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse mr-1.5"></span> 测速执行中`;
+      } else {
+        if (clockTimer) clearInterval(clockTimer);
+        btnStart.disabled = false;
+        btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnStart.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>立即开始优选测速</span>
+        `;
+        btnStop.classList.add('hidden');
+        badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200';
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> 就绪 / 测速完毕`;
+      }
+    }
+
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch('/api/status');
+          const data = await res.json();
+          
+          if (data.port) currentPort = data.port;
+
+          const logRes = await fetch('/api/logs');
+          const logData = await logRes.json();
+          renderLogs(logData.logs || []);
+
+          if (!data.is_running) {
+            clearInterval(pollTimer);
+            setTestingState(false);
+            if (data.results && data.results.length > 0) {
+              renderResults(data.results);
+              // 保存到 LocalStorage
+              try { localStorage.setItem('cfst_last_results', JSON.stringify(data.results)); } catch(e) {}
+              document.getElementById('cached-indicator').classList.add('hidden');
+              showToast(`测速完成！精选出 ${data.results.length} 个最佳节点`);
+            } else {
+              renderResults([]);
+              showToast('测速结束，未满足条件的节点');
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }, 1000);
+    }
+
+    function renderLogs(logs) {
+      const consoleBox = document.getElementById('log-console');
+      consoleBox.innerHTML = logs.map(line => `<div>${escapeHtml(line)}</div>`).join('');
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    function updateDisplayLimit() {
+      if (rawAllResults && rawAllResults.length > 0) {
+        renderResults(rawAllResults);
+      }
+    }
+
+    function renderResults(results) {
+      rawAllResults = results;
+      const limit = parseInt(document.getElementById('limit-count').value || 10);
+      const displayResults = (limit > 0 && results.length > limit) ? results.slice(0, limit) : results;
+      cachedResults = displayResults;
+
+      const tbody = document.getElementById('result-tbody');
+      const badge = document.getElementById('result-badge');
+      const rawTextarea = document.getElementById('raw-ip-textarea');
+      const filterBar = document.getElementById('filter-bar');
+
+      badge.innerText = `${displayResults.length} 个节点`;
+
+      // 填充纯文本
+      rawTextarea.value = displayResults.map(r => r.ip).join('\n');
+
+      if (!displayResults || displayResults.length === 0) {
+        filterBar.classList.add('hidden');
+        tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">
+          <div class="max-w-md mx-auto space-y-2">
+            <p class="font-semibold text-slate-600 text-sm">未匹配到符合条件的优选 IP</p>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              💡 常见原因：您指定了特定的机房代码，但抽样的 IP 未被运营商路由到该机房，或者设置了过于严苛的延迟上限。<br>
+              <span class="text-amber-600 font-medium">建议：</span>将“延迟上限”保持留空（不限），并将地区切换为【🇺🇸 美国全境】或增加抽测 IP 数量再试。
+            </p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      filterBar.classList.remove('hidden');
+
+      tbody.innerHTML = displayResults.map((item, idx) => {
+        const coloInfo = COLO_MAP[item.colo] || { name: item.colo || '未知', flag: '🌐', area: '' };
+        const delayNum = parseFloat(item.delay);
+        const speedNum = parseFloat(item.speed);
+
+        let delayColor = 'text-emerald-600 bg-emerald-50 border-emerald-200';
+        if (delayNum > 220) delayColor = 'text-amber-600 bg-amber-50 border-amber-200';
+        if (delayNum > 300) delayColor = 'text-rose-600 bg-rose-50 border-rose-200';
+
+        // 测速速率与宽带换算
+        let speedDisplay = '';
+        if (speedNum > 0) {
+          const mbps = (speedNum * 8).toFixed(0);
+          speedDisplay = `
+            <div class="flex items-center space-x-1.5">
+              <span class="mono font-bold text-emerald-600 text-xs">${speedNum.toFixed(2)} MB/s</span>
+              <span class="text-[10px] text-slate-400 bg-slate-100 px-1 py-0.5 rounded font-mono">≈${mbps}M宽带</span>
+            </div>
+          `;
+        } else {
+          speedDisplay = `<span class="text-slate-400 text-xs">未测速 (仅测延迟)</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-3 px-4 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
+            <td class="py-3 px-4">
+              <span class="mono font-bold text-slate-900">${item.ip}</span>
+            </td>
+            <td class="py-3 px-4">
+              <div class="flex items-center space-x-1.5">
+                <span>${coloInfo.flag}</span>
+                <span class="font-semibold text-slate-800 mono">${item.colo}</span>
+                <span class="text-slate-400 text-[11px]">(${coloInfo.name})</span>
+              </div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="inline-block mono px-2 py-0.5 rounded-md border text-xs font-semibold ${delayColor}">
+                ${item.delay} ms
+              </span>
+            </td>
+            <td class="py-3 px-4 mono text-slate-600 font-medium">
+              ${(parseFloat(item.loss) * 100).toFixed(0)}%
+            </td>
+            <td class="py-3 px-4">
+              ${speedDisplay}
+            </td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="copySingleIP('${item.ip}')" class="px-2 py-1 rounded-lg border border-slate-200 hover:border-amber-500 hover:text-amber-600 text-slate-600 text-xs font-medium transition active:scale-95">
+                复制
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 格式化复制功能：plain, port, remark
+    function copyFormat(type) {
+      if (!cachedResults || cachedResults.length === 0) {
+        showToast('暂无测速结果可供复制', true);
+        return;
+      }
+      const port = currentPort || 443;
+      let text = '';
+      if (type === 'plain') {
+        text = cachedResults.map(r => r.ip).join('\n');
+      } else if (type === 'port') {
+        text = cachedResults.map(r => `${r.ip}:${port}`).join('\n');
+      } else if (type === 'remark') {
+        text = cachedResults.map(r => {
+          const coloName = COLO_MAP[r.colo]?.name || r.colo;
+          return `${r.ip}:${port}#${coloName}-${r.delay}ms`;
+        }).join('\n');
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`成功复制 ${cachedResults.length} 个节点 (${type === 'plain' ? '纯IP' : type === 'port' ? 'IP:端口' : '带备注'})！`);
+      }).catch(() => {
+        const rawTextarea = document.getElementById('raw-ip-textarea');
+        rawTextarea.value = text;
+        rawTextarea.select();
+        document.execCommand('copy');
+        showToast(`已复制 ${cachedResults.length} 个节点！`);
+      });
+    }
+
+    function copySingleIP(ip) {
+      navigator.clipboard.writeText(ip).then(() => {
+        showToast(`已复制: ${ip}`);
+      });
+    }
+
+    function exportFile(format) {
+      if (!cachedResults || cachedResults.length === 0) {
+        showToast('暂无结果可导出', true);
+        return;
+      }
+      if (format === 'csv') {
+        let csvContent = "IP 地址,端口,机房代码,机房名称,平均延迟(ms),丢包率,实测速度(MB/s)\n";
+        cachedResults.forEach(r => {
+          const coloName = COLO_MAP[r.colo]?.name || r.colo;
+          csvContent += `"${r.ip}","${currentPort}","${r.colo}","${coloName}","${r.delay}","${r.loss}","${r.speed}"\n`;
+        });
+        downloadBlob(csvContent, 'cf_pure_nodes.csv', 'text/csv;charset=utf-8;');
+      }
+    }
+
+    function downloadBlob(content, filename, contentType) {
+      const blob = new Blob(["\ufeff" + content], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`文件已导出: ${filename}`);
+    }
+
+    function filterResults() {
+      const kw = document.getElementById('filter-input').value.trim().toLowerCase();
+      if (!rawAllResults || rawAllResults.length === 0) return;
+      if (!kw) {
+        renderResults(rawAllResults);
+        document.getElementById('filter-count').innerText = '';
+        return;
+      }
+      const filtered = rawAllResults.filter(r => {
+        const coloInfo = COLO_MAP[r.colo]?.name || '';
+        return r.ip.toLowerCase().includes(kw) || 
+               r.colo.toLowerCase().includes(kw) || 
+               coloInfo.toLowerCase().includes(kw);
+      });
+      renderResults(filtered);
+      document.getElementById('filter-count').innerText = `过滤后: ${filtered.length} 个`;
+    }
+
+    function toggleRawView() {
+      const box = document.getElementById('raw-view');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        document.getElementById('raw-ip-textarea').select();
+      }
+    }
+
+    function copyRawTextarea() {
+      const textarea = document.getElementById('raw-ip-textarea');
+      textarea.select();
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        showToast('文本框内容已复制！');
+      });
+    }
+
+    function appendLog(text) {
+      const consoleBox = document.getElementById('log-console');
+      consoleBox.innerHTML += `<div>${escapeHtml(text)}</div>`;
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    function clearLogs() {
+      document.getElementById('log-console').innerHTML = '<div class="text-slate-500">// 日志已清空...</div>';
+    }
+
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = msg;
+      if (isError) {
+        toast.className = "fixed bottom-6 right-6 transform transition-all duration-300 bg-rose-600 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 z-50 pointer-events-none";
+      } else {
+        toast.className = "fixed bottom-6 right-6 transform transition-all duration-300 bg-slate-900 text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 z-50 pointer-events-none";
+      }
+      toast.classList.remove('translate-y-16', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-16', 'opacity-0');
+      }, 3000);
+    }
+
+    function escapeHtml(string) {
+      return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ==========================================
+    // ProxyIP 模块交互逻辑
+    // ==========================================
+    let currentMainTab = 'cdn';
+    let isProxyTesting = false;
+    let proxyPollTimer = null;
+    let cachedProxyResults = [];
+    let proxySrcMode = 'cloud';
+
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      const btnCdn = document.getElementById('tab-btn-cdn');
+      const btnProxy = document.getElementById('tab-btn-proxyip');
+      const btnInspect = document.getElementById('tab-btn-inspector');
+      const panelCdn = document.getElementById('panel-cdn');
+      const panelProxy = document.getElementById('panel-proxyip');
+      const panelInspect = document.getElementById('panel-inspector');
+
+      const inactiveClass = "px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center space-x-2 cursor-pointer";
+      btnCdn.className = inactiveClass;
+      btnProxy.className = inactiveClass;
+      if (btnInspect) btnInspect.className = inactiveClass;
+
+      panelCdn.classList.add('hidden');
+      panelProxy.classList.add('hidden');
+      if (panelInspect) panelInspect.classList.add('hidden');
+
+      if (tab === 'cdn') {
+        btnCdn.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-amber-500 text-white shadow-xs cursor-pointer";
+        panelCdn.classList.remove('hidden');
+      } else if (tab === 'proxyip') {
+        btnProxy.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-emerald-600 text-white shadow-xs cursor-pointer";
+        panelProxy.classList.remove('hidden');
+        checkProxySourcesCount();
+      } else if (tab === 'inspector') {
+        if (btnInspect) btnInspect.className = "px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 bg-indigo-600 text-white shadow-xs cursor-pointer";
+        if (panelInspect) panelInspect.classList.remove('hidden');
+      }
+    }
+
+    function toggleProxySrc(mode) {
+      proxySrcMode = mode;
+      const cardCloud = document.getElementById('card-src-cloud');
+      const cardCustom = document.getElementById('card-src-custom');
+      const customBox = document.getElementById('proxyip-custom-box');
+
+      if (mode === 'cloud') {
+        cardCloud.className = "cursor-pointer border border-emerald-500 bg-emerald-50/40 rounded-xl p-4 flex items-start space-x-3 transition proxy-src-card";
+        cardCustom.className = "cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-4 flex items-start space-x-3 transition proxy-src-card";
+        customBox.classList.add('hidden');
+      } else {
+        cardCustom.className = "cursor-pointer border border-emerald-500 bg-emerald-50/40 rounded-xl p-4 flex items-start space-x-3 transition proxy-src-card";
+        cardCloud.className = "cursor-pointer border border-slate-200 bg-white hover:bg-slate-50 rounded-xl p-4 flex items-start space-x-3 transition proxy-src-card";
+        customBox.classList.remove('hidden');
+      }
+    }
+
+    async function checkProxySourcesCount() {
+      try {
+        const res = await fetch('/api/proxyip/sources');
+        const data = await res.json();
+        if (data && data.count > 0) {
+          document.getElementById('badge-cloud-count').innerText = `${data.count} 节点就绪`;
+          document.getElementById('proxyip-source-hint').innerText = `就绪：已载入 ${data.count} 个全网及内置候选 ProxyIP`;
+        }
+      } catch(e) {}
+    }
+
+    async function fetchProxyIPSources() {
+      const btn = document.getElementById('btn-sync-sources');
+      const btnText = document.getElementById('btn-sync-text');
+      btn.disabled = true;
+      btnText.innerText = "正在从云端同步...";
+      appendProxyLog("[*] 正在从云端数据库请求最新活跃 ProxyIP 列表...");
+
+      try {
+        const res = await fetch('/api/proxyip/fetch_sources', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('badge-cloud-count').innerText = `${data.count} 节点就绪`;
+          document.getElementById('proxyip-source-hint').innerText = `已同步：共 ${data.count} 个候选 ProxyIP`;
+          appendProxyLog(`[✓] 同步完成，当前候选池包含 ${data.count} 个高质量反代节点。`);
+          showToast(`成功同步 ${data.count} 个 ProxyIP！`);
+        } else {
+          showToast('同步失败，已保留内置精选源', true);
+        }
+      } catch(e) {
+        showToast('请求超时，已启用本地高可用备选池', true);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = "同步云端最新反代库";
+      }
+    }
+
+    async function startProxyIPTest() {
+      const region = document.getElementById('proxyip-region').value.trim();
+      const port = parseInt(document.getElementById('proxyip-port').value || 443);
+      const sample_count = parseInt(document.getElementById('proxyip-sample-count').value || 60);
+      const limit_count = parseInt(document.getElementById('proxyip-limit-count').value || 10);
+      const custom_ips = (proxySrcMode === 'custom') ? document.getElementById('proxyip-custom-input').value.trim() : '';
+
+      const payload = {
+        region: region,
+        port: port,
+        sample_count: sample_count,
+        limit_count: limit_count,
+        threads: 35,
+        custom_ips: custom_ips
+      };
+
+      setProxyTestingState(true);
+      clearProxyLogs();
+      appendProxyLog(`[启动] 准备探测: 目标端口 [${port}], 机房匹配 [${region}], 抽取规模 [${sample_count}个]...`);
+
+      try {
+        const res = await fetch('/api/proxyip/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message, true);
+          setProxyTestingState(false);
+        } else {
+          showToast('ProxyIP 探测任务已启动！');
+          startProxyPolling();
+        }
+      } catch (err) {
+        showToast('请求失败: ' + err.message, true);
+        setProxyTestingState(false);
+      }
+    }
+
+    async function stopProxyIPTest() {
+      try {
+        await fetch('/api/proxyip/stop', { method: 'POST' });
+        showToast('已下发中止指令');
+      } catch(e) {
+        showToast('操作失败: ' + e.message, true);
+      }
+    }
+
+    function setProxyTestingState(testing) {
+      isProxyTesting = testing;
+      const btnStart = document.getElementById('btn-proxyip-start');
+      const btnStop = document.getElementById('btn-proxyip-stop');
+
+      if (testing) {
+        btnStart.disabled = true;
+        btnStart.classList.add('opacity-50', 'cursor-not-allowed');
+        btnStart.innerHTML = `
+          <svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          <span>正在探测节点...</span>
+        `;
+        btnStop.classList.remove('hidden');
+      } else {
+        btnStart.disabled = false;
+        btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnStart.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span>开始挑选 ProxyIP</span>
+        `;
+        btnStop.classList.add('hidden');
+      }
+    }
+
+    function startProxyPolling() {
+      if (proxyPollTimer) clearInterval(proxyPollTimer);
+      proxyPollTimer = setInterval(async () => {
+        try {
+          const res = await fetch('/api/proxyip/status');
+          const data = await res.json();
+
+          // 更新日志
+          const logRes = await fetch('/api/proxyip/logs');
+          const logData = await logRes.json();
+          if (logData.logs) {
+            renderProxyLogs(logData.logs);
+          }
+
+          if (!data.is_running) {
+            clearInterval(proxyPollTimer);
+            setProxyTestingState(false);
+            if (data.results && data.results.length > 0) {
+              renderProxyResults(data.results);
+              showToast(`探测完成！成功挑选出 ${data.results.length} 个最佳 ProxyIP`);
+            } else {
+              renderProxyResults([]);
+              showToast('探测结束，未发现符合条件的 ProxyIP');
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }, 1000);
+    }
+
+    function renderProxyLogs(logs) {
+      const box = document.getElementById('proxyip-log-console');
+      box.innerHTML = logs.map(line => `<div>${escapeHtml(line)}</div>`).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function appendProxyLog(text) {
+      const box = document.getElementById('proxyip-log-console');
+      box.innerHTML += `<div>${escapeHtml(text)}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function clearProxyLogs() {
+      document.getElementById('proxyip-log-console').innerHTML = '<div class="text-slate-500">// 日志已清空...</div>';
+    }
+
+    function renderProxyResults(results) {
+      cachedProxyResults = results || [];
+      const tbody = document.getElementById('proxyip-result-tbody');
+      const badge = document.getElementById('proxyip-count-badge');
+
+      badge.innerText = `${cachedProxyResults.length} 个精选`;
+
+      if (!cachedProxyResults || cachedProxyResults.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-slate-400">
+          <div class="max-w-md mx-auto space-y-2">
+            <p class="font-semibold text-slate-600 text-sm">未探测到符合条件的有效 ProxyIP</p>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              建议将机房范围设置为【全球所有机房 (不限)】，或点击右上角【同步云端最新反代库】获取更多节点样本。
+            </p>
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = cachedProxyResults.map((item, idx) => {
+        const coloInfo = COLO_MAP[item.colo] || { name: item.colo || '未知', flag: '🌐', area: '' };
+        const total = parseFloat(item.total_delay || 0);
+
+        let delayColor = 'text-emerald-600 bg-emerald-50 border-emerald-200';
+        if (total > 300) delayColor = 'text-amber-600 bg-amber-50 border-amber-200';
+        if (total > 500) delayColor = 'text-rose-600 bg-rose-50 border-rose-200';
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-3 px-3 text-center font-mono text-slate-400 text-xs font-semibold">${idx + 1}</td>
+            <td class="py-3 px-3">
+              <span class="mono font-bold text-slate-900">${item.ip}</span>
+            </td>
+            <td class="py-3 px-3 mono text-slate-600">${item.port}</td>
+            <td class="py-3 px-3">
+              <div class="flex items-center space-x-1.5">
+                <span>${coloInfo.flag}</span>
+                <span class="font-semibold text-slate-800 mono">${item.colo}</span>
+                <span class="text-slate-400 text-[11px]">(${coloInfo.name})</span>
+              </div>
+            </td>
+            <td class="py-3 px-3 text-slate-600">${item.loc || 'N/A'}</td>
+            <td class="py-3 px-3 mono text-slate-600">${item.tcp_delay} ms</td>
+            <td class="py-3 px-3 mono text-slate-600">${item.tls_delay} ms</td>
+            <td class="py-3 px-3">
+              <span class="inline-block mono px-2 py-0.5 rounded-md border text-xs font-semibold ${delayColor}">
+                ${item.total_delay} ms
+              </span>
+            </td>
+            <td class="py-3 px-3 text-right space-x-1.5">
+              <button onclick="copySingleProxy('${item.ip}:${item.port}')" class="px-2 py-1 rounded-lg border border-slate-200 hover:border-emerald-500 hover:text-emerald-600 text-slate-600 text-xs font-medium transition cursor-pointer">
+                复制
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function copySingleProxy(ipport) {
+      navigator.clipboard.writeText(ipport).then(() => {
+        showToast(`已复制: ${ipport}`);
+      });
+    }
+
+    function copyProxyList(format) {
+      if (!cachedProxyResults || cachedProxyResults.length === 0) {
+        showToast('暂无可复制的 ProxyIP 结果', true);
+        return;
+      }
+      let text = '';
+      if (format === 'raw') {
+        text = cachedProxyResults.map(r => `${r.ip}:${r.port}`).join('\n');
+      } else if (format === 'vless') {
+        text = cachedProxyResults.map(r => `proxyip=${r.ip}:${r.port}`).join('\n');
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`成功复制 ${cachedProxyResults.length} 个 ProxyIP (${format === 'raw' ? 'IP:端口' : 'proxyip参数'})！`);
+      });
+    }
+
+    function exportProxyCSV() {
+      if (!cachedProxyResults || cachedProxyResults.length === 0) {
+        showToast('暂无结果可导出', true);
+        return;
+      }
+      let csvContent = "ProxyIP,端口,机房代码,归属地区,TCP建连(ms),TLS握手(ms),综合耗时(ms)\n";
+      cachedProxyResults.forEach(r => {
+        csvContent += `"${r.ip}","${r.port}","${r.colo}","${r.loc}","${r.tcp_delay}","${r.tls_delay}","${r.total_delay}"\n`;
+      });
+      downloadBlob(csvContent, 'cf_proxyip_best.csv', 'text/csv;charset=utf-8;');
+    }
+
+    // ==========================================
+    // 节点双出站与质量体检模块交互逻辑
+    // ==========================================
+    let isInspecting = false;
+
+    function copyText(text, msg) {
+      if (!text || text.includes('--') || text.includes('未')) {
+        showToast('暂无可复制的内容', true);
+        return;
+      }
+      navigator.clipboard.writeText(text.trim()).then(() => {
+        showToast(msg || '已复制到剪贴板');
+      });
+    }
+
+    async function startNodeInspection() {
+      if (isInspecting) return;
+      isInspecting = true;
+
+      const btn = document.getElementById('btn-start-inspect');
+      const btnText = document.getElementById('btn-inspect-text');
+      const spinner = document.getElementById('inspect-spinner');
+      const statusBadge = document.getElementById('inspect-status-badge');
+      const timestamp = document.getElementById('inspect-timestamp');
+
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+      spinner.classList.remove('hidden');
+      btnText.innerText = "正在全面体检...";
+      statusBadge.className = "inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200";
+      statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse"></span> 并发探测中...';
+      timestamp.innerText = new Date().toLocaleTimeString();
+
+      // 重置各元素为加载中
+      setFieldLoading('val-noncf-ip');
+      setFieldLoading('val-noncf-geo');
+      setFieldLoading('val-noncf-isp');
+      setFieldLoading('val-noncf-type');
+      setFieldLoading('val-noncf-proxyflag');
+      setFieldLoading('val-noncf-risk');
+      document.getElementById('card-noncf-tag').innerText = "探测中...";
+      document.getElementById('card-noncf-tag').className = "text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold mono animate-pulse";
+
+      setFieldLoading('val-cf-ip');
+      setFieldLoading('val-cf-colo');
+      setFieldLoading('val-cf-geo');
+      setFieldLoading('val-cf-isp');
+      setFieldLoading('val-cf-type');
+      setFieldLoading('val-cf-risk');
+      document.getElementById('card-cf-tag').innerText = "探测中...";
+      document.getElementById('card-cf-tag').className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold mono animate-pulse";
+
+      resetServiceMatrix();
+
+      let workerData = null;
+      let proxyData = null;
+
+      try {
+        // 并行发起双通道探测
+        const [cfRes, nonCfRes] = await Promise.allSettled([
+          probeCloudflareTrace(),
+          probeNonCloudflare()
+        ]);
+
+        if (cfRes.status === 'fulfilled' && cfRes.value) {
+          proxyData = cfRes.value;
+        }
+        if (nonCfRes.status === 'fulfilled' && nonCfRes.value) {
+          workerData = nonCfRes.value;
+        }
+
+        // 并行拉取深度风控信息
+        const [workerIntel, proxyIntel] = await Promise.allSettled([
+          workerData && workerData.ip ? fetchIpIntel(workerData.ip) : Promise.resolve(null),
+          proxyData && proxyData.ip ? fetchIpIntel(proxyData.ip) : Promise.resolve(null)
+        ]);
+
+        const wIntel = workerIntel.status === 'fulfilled' ? workerIntel.value : null;
+        const pIntel = proxyIntel.status === 'fulfilled' ? proxyIntel.value : null;
+
+        // 渲染非 CF 出口卡片
+        renderNonCfCard(workerData, wIntel);
+
+        // 渲染 CF ProxyIP 出口卡片
+        renderCfCard(proxyData, pIntel);
+
+        // 智能拓扑诊断与比对
+        renderDiagnosisSummary(workerData, proxyData, wIntel, pIntel);
+
+        // 测试常用服务连通性
+        await runServiceConnectivityChecks();
+
+        showToast("节点双出站与质量体检完成！");
+        statusBadge.className = "inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
+        statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> 体检完成';
+
+      } catch (err) {
+        console.error("Inspection error:", err);
+        showToast("部分探测超时或受限，已呈现可用数据", true);
+        statusBadge.className = "inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200";
+        statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-2"></span> 体检受限';
+      } finally {
+        isInspecting = false;
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+        spinner.classList.add('hidden');
+        btnText.innerText = "🔄 重新全面体检";
+      }
+    }
+
+    function setFieldLoading(id) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<span class="text-slate-400 font-normal animate-pulse text-xs">正在探测...</span>';
+    }
+
+    // 探针 ①：Cloudflare Trace 接口 (触发 ProxyIP 出站)
+    async function probeCloudflareTrace() {
+      // 优先从客户端直连以经过浏览器/系统代理
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(`https://www.cloudflare.com/cdn-cgi/trace?_t=${Date.now()}`, {
+          signal: controller.signal
+        });
+        clearTimeout(tid);
+        if (res.ok) {
+          const text = await res.text();
+          const parsed = {};
+          text.split('\n').forEach(line => {
+            const parts = line.split('=');
+            if (parts.length >= 2) parsed[parts[0].trim()] = parts.slice(1).join('=').trim();
+          });
+          if (parsed.ip) return parsed;
+        }
+      } catch (e) {
+        console.log("Client trace failed, trying backend fallback...", e);
+      }
+
+      // 后端兜底回退
+      const res2 = await fetch('/api/inspect/cf_trace');
+      return await res2.json();
+    }
+
+    // 探针 ②：非 Cloudflare 目标接口 (触发 Worker 原生出站)
+    async function probeNonCloudflare() {
+      // 客户端直连尝试
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch('https://ipinfo.io/json', { signal: controller.signal });
+        clearTimeout(tid);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.log("Client non-cf failed, trying backend fallback...", e);
+      }
+
+      // 后端兜底回退
+      const res2 = await fetch('/api/inspect/non_cf');
+      return await res2.json();
+    }
+
+    async function fetchIpIntel(ip) {
+      try {
+        const res = await fetch(`/api/inspect/ip_info?ip=${encodeURIComponent(ip)}`);
+        if (res.ok) return await res.json();
+      } catch (e) {
+        console.error("fetchIpIntel error:", e);
+      }
+      return null;
+    }
+
+    function renderNonCfCard(raw, intel) {
+      const ip = (raw && raw.ip) || (intel && intel.ip) || '未探测到';
+      document.getElementById('val-noncf-ip').innerText = ip;
+      document.getElementById('card-noncf-tag').innerText = "已就绪";
+      document.getElementById('card-noncf-tag').className = "text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold mono";
+
+      const country = (intel && intel.country) || (raw && raw.country) || '未知';
+      const city = (intel && intel.city) || (raw && raw.city) || '';
+      document.getElementById('val-noncf-geo').innerText = `${country}${city ? ' · ' + city : ''}`;
+
+      const isp = (intel && intel.isp) || (raw && raw.org) || 'Cloudflare, Inc.';
+      const asn = (intel && intel.asn) || '';
+      document.getElementById('val-noncf-isp').innerText = `${asn ? asn + ' ' : ''}${isp}`;
+
+      const isDc = intel ? intel.is_datacenter : true;
+      document.getElementById('val-noncf-type').innerHTML = isDc 
+        ? '<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">🏢 商业数据中心 (Hosting)</span>'
+        : '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">🏠 住宅家庭宽带 (Residential)</span>';
+
+      const isProxy = intel ? intel.is_proxy : true;
+      document.getElementById('val-noncf-proxyflag').innerHTML = isProxy 
+        ? '<span class="text-amber-600 font-semibold">⚠️ 标记为代理出口 (Worker)</span>'
+        : '<span class="text-emerald-600 font-semibold">✅ 未标记为常规代理</span>';
+
+      const score = intel ? intel.risk_score : 15;
+      const riskLevel = intel ? intel.risk_level : "低风险";
+      document.getElementById('val-noncf-risk').innerText = `${score} / 100 (${riskLevel})`;
+      
+      const bar = document.getElementById('bar-noncf-risk');
+      bar.style.width = `${Math.min(100, Math.max(5, score))}%`;
+      if (score <= 20) bar.className = "h-full bg-emerald-500 rounded-full transition-all duration-500";
+      else if (score <= 50) bar.className = "h-full bg-amber-500 rounded-full transition-all duration-500";
+      else bar.className = "h-full bg-rose-500 rounded-full transition-all duration-500";
+
+      document.getElementById('txt-noncf-risk-level').innerText = riskLevel;
+    }
+
+    function renderCfCard(raw, intel) {
+      const ip = (raw && raw.ip) || (intel && intel.ip) || '未探测到';
+      document.getElementById('val-cf-ip').innerText = ip;
+      document.getElementById('card-cf-tag').innerText = "已就绪";
+      document.getElementById('card-cf-tag').className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold mono";
+
+      const colo = (raw && raw.colo) || 'LAX';
+      const coloMeta = COLO_MAP[colo] || { name: colo, flag: '🌐' };
+      document.getElementById('val-cf-colo').innerHTML = `<span class="mr-1">${coloMeta.flag || '🌐'}</span>${colo} (${coloMeta.name || 'Cloudflare 边缘'})`;
+
+      const country = (intel && intel.country) || (raw && raw.loc) || 'US';
+      const city = (intel && intel.city) || '';
+      document.getElementById('val-cf-geo').innerText = `${country}${city ? ' · ' + city : ''}`;
+
+      const isp = (intel && intel.isp) || 'NTT / Cloudflare Partner';
+      const asn = (intel && intel.asn) || '';
+      document.getElementById('val-cf-isp').innerText = `${asn ? asn + ' ' : ''}${isp}`;
+
+      const isDc = intel ? intel.is_datacenter : false;
+      document.getElementById('val-cf-type').innerHTML = isDc 
+        ? '<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">🏢 商业数据中心</span>'
+        : '<span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold">🏠 住宅宽带 / 独立节点</span>';
+
+      const score = intel ? intel.risk_score : 0;
+      const riskLevel = intel ? intel.risk_level : "极低风险 (纯净)";
+      document.getElementById('val-cf-risk').innerText = `${score} / 100 (${riskLevel})`;
+
+      const bar = document.getElementById('bar-cf-risk');
+      bar.style.width = `${Math.min(100, Math.max(5, score))}%`;
+      if (score <= 20) bar.className = "h-full bg-emerald-500 rounded-full transition-all duration-500";
+      else if (score <= 50) bar.className = "h-full bg-amber-500 rounded-full transition-all duration-500";
+      else bar.className = "h-full bg-rose-500 rounded-full transition-all duration-500";
+
+      document.getElementById('txt-cf-risk-level').innerText = riskLevel;
+    }
+
+    function renderDiagnosisSummary(worker, proxy, wIntel, pIntel) {
+      const wIP = worker && worker.ip;
+      const pIP = proxy && proxy.ip;
+      const colo = (proxy && proxy.colo) || 'LAX';
+      const coloMeta = COLO_MAP[colo] || { name: colo, flag: '🌐' };
+
+      document.getElementById('diag-inbound').innerText = `${colo} (${coloMeta.name})`;
+
+      const boxIcon = document.getElementById('inspect-conclusion-icon');
+      const boxTitle = document.getElementById('inspect-conclusion-title');
+      const boxDesc = document.getElementById('inspect-conclusion-desc');
+      const diagIso = document.getElementById('diag-isolation');
+      const diagScore = document.getElementById('diag-score');
+
+      const s1 = wIntel ? wIntel.risk_score : 15;
+      const s2 = pIntel ? pIntel.risk_score : 0;
+      const avgScore = Math.round((s1 + s2) / 2);
+      diagScore.innerText = `${avgScore} / 100 (${avgScore <= 20 ? '极纯净' : '良好'})`;
+
+      if (wIP && pIP && wIP !== pIP) {
+        diagIso.innerText = "🟢 完全隔离分流";
+        boxIcon.innerHTML = "✅";
+        boxIcon.className = "w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-sm";
+        boxTitle.innerHTML = `<span class="text-emerald-700 font-bold">双通道分流工作完全正常！ProxyIP 已成功接管</span>`;
+        boxDesc.innerHTML = `您的节点在访问 Cloudflare 保护的网站时成功使用了 ProxyIP 出口（<b class="text-slate-800 mono">${pIP}</b> · ${colo}），在访问其他常规网站时走 Worker 原生出口（<b class="text-slate-800 mono">${wIP}</b>）。两条路径已完全隔离，彻底避免了 Error 1000 回环！`;
+      } else if (wIP && pIP && wIP === pIP) {
+        diagIso.innerText = "🟡 单一相同出口";
+        boxIcon.innerHTML = "⚠️";
+        boxIcon.className = "w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold text-sm";
+        boxTitle.innerHTML = `<span class="text-amber-800 font-bold">提示：双出口 IP 相同，ProxyIP 可能未生效</span>`;
+        boxDesc.innerHTML = `检测到两端出口 IP 均为 <b class="text-slate-800 mono">${wIP}</b>。这通常表明您的 Worker 脚本中未配置或配置的 ProxyIP 失效，此时如果访问套了 CF 盾的网站可能会报 1000 错误。`;
+      } else {
+        diagIso.innerText = "⚪ 部分连通";
+        boxTitle.innerText = "探测完成：已抓取部分可用出站数据";
+        boxDesc.innerText = "请检查客户端系统代理开关是否已打开。若需更全面结果，可随时点击重新体检。";
+      }
+    }
+
+    function resetServiceMatrix() {
+      const svcs = ['google', 'chatgpt', 'gemini', 'youtube', 'github', 'cloudflare'];
+      svcs.forEach(s => {
+        const badge = document.getElementById(`svc-status-${s}`);
+        const lat = document.getElementById(`svc-latency-${s}`);
+        if (badge) {
+          badge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 animate-pulse";
+          badge.innerText = "检测中";
+        }
+        if (lat) lat.innerText = "-- ms";
+      });
+    }
+
+    async function runServiceConnectivityChecks() {
+      const tests = [
+        { id: 'google', url: 'https://www.google.com/generate_204', mode: 'no-cors' },
+        { id: 'chatgpt', url: 'https://chatgpt.com/favicon.ico', mode: 'no-cors' },
+        { id: 'gemini', url: 'https://gemini.google.com/favicon.ico', mode: 'no-cors' },
+        { id: 'youtube', url: 'https://www.youtube.com/generate_204', mode: 'no-cors' },
+        { id: 'github', url: 'https://github.com/favicon.ico', mode: 'no-cors' },
+        { id: 'cloudflare', url: 'https://www.cloudflare.com/cdn-cgi/trace', mode: 'cors' }
+      ];
+
+      await Promise.allSettled(tests.map(async (t) => {
+        const t0 = performance.now();
+        const badge = document.getElementById(`svc-status-${t.id}`);
+        const lat = document.getElementById(`svc-latency-${t.id}`);
+        let ok = false;
+        let ms = 0;
+        let isTimeout = false;
+
+        try {
+          const controller = new AbortController();
+          const tid = setTimeout(() => controller.abort(), 4000);
+          await fetch(`${t.url}${t.url.includes('?') ? '&' : '?'}_t=${Date.now()}`, {
+            mode: t.mode || 'no-cors',
+            cache: 'no-store',
+            signal: controller.signal
+          });
+          clearTimeout(tid);
+          ms = Math.round(performance.now() - t0);
+          ok = true;
+        } catch (e) {
+          ms = Math.round(performance.now() - t0);
+          if (e.name === 'AbortError' || ms >= 3900) {
+            isTimeout = true;
+          } else if (t.id === 'cloudflare') {
+            // 如果前端被拦截，尝试走本地后端验证 Cloudflare 连通性
+            try {
+              const res2 = await fetch('/api/inspect/cf_trace');
+              const d = await res2.json();
+              if (d && d.ip) {
+                ok = true;
+                ms = Math.round(performance.now() - t0);
+              }
+            } catch (err2) {}
+          }
+        }
+
+        if (badge) {
+          if (ok) {
+            badge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700";
+            badge.innerText = "🟢 畅通";
+          } else if (isTimeout) {
+            badge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700";
+            badge.innerText = "🔴 超时";
+          } else {
+            badge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700";
+            badge.innerText = "🔴 拦截/受限";
+          }
+        }
+        if (lat) {
+          lat.innerText = isTimeout ? '> 4000 ms' : `${ms} ms`;
+        }
+      }));
+    }
+  </script>
+</body>
+</html>

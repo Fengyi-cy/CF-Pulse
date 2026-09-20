@@ -1,0 +1,34 @@
+#!/bin/bash
+PORT=8989
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 优先读取 App 内部 Resources 目录，完全自包含
+LAUNCHER_DIR="$SCRIPT_DIR/../Resources/launcher"
+
+IS_HEALTHY=0
+if lsof -i :$PORT >/dev/null 2>&1; then
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 1 "http://127.0.0.1:$PORT/api/status" 2>/dev/null || echo "000")
+    if [ "$HTTP_CODE" = "200" ]; then
+        IS_HEALTHY=1
+    else
+        # 端口被僵尸进程或异常服务占用，强制释放
+        OCCUPYING_PID=$(lsof -ti :$PORT)
+        if [ -n "$OCCUPYING_PID" ]; then
+            kill -9 $OCCUPYING_PID 2>/dev/null
+            sleep 0.3
+        fi
+    fi
+fi
+
+if [ $IS_HEALTHY -eq 0 ]; then
+    nohup python3 "$LAUNCHER_DIR/server.py" > /dev/null 2>&1 &
+    # 等待服务就绪（最多 3 秒）
+    for i in {1..15}; do
+        if curl -s -f -m 1 "http://127.0.0.1:$PORT/api/status" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.2
+    done
+fi
+
+open "http://127.0.0.1:$PORT"
