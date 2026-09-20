@@ -1,6 +1,6 @@
 #!/bin/sh
 # ==============================================================================
-# CloudflareSpeedTest Pro - Android (Termux) 智能极速启动脚本
+# CF-Pulse - Android (Termux) 智能极速启动脚本
 # 功能：后台自启服务、自动复制访问网址到安卓系统剪贴板、自动唤起手机默认浏览器
 # ==============================================================================
 
@@ -30,7 +30,7 @@ elif command -v netstat >/dev/null 2>&1; then
 fi
 
 if [ $IS_RUNNING -eq 0 ]; then
-    echo "[*] 正在启动 Cloudflare 节点优选后台服务..."
+    echo "[*] 正在启动 CF 节点优选后台服务..."
     cd "$SCRIPT_DIR" && nohup python3 "$SCRIPT_DIR/server.py" > /dev/null 2>&1 &
     
     # 等待服务就绪（最多 2 秒）
@@ -61,7 +61,7 @@ fi
 # 6. 友好终端控制台反馈
 clear 2>/dev/null || true
 echo "========================================================"
-echo "    🚀 Cloudflare 节点优选控制台 (Android Pro) 就绪    "
+echo "    🚀 CF-Pulse 控制台 (Android Pro) 就绪    "
 echo "========================================================"
 echo " [✓] 本地后台服务 : 正常运行中 (端口: $PORT)"
 echo " [✓] 手机访问网址 : $URL"

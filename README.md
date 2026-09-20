@@ -1,8 +1,8 @@
-# Cloudflare 节点优选与双出站质量深度体检控制台 (Pro)
+# CF-Pulse - 节点优选与双出站质量深度体检控制台 (Pro)
 
 > **全平台原生支持 · macOS 原生自包含 App + Android (Termux) 移动端专属架构 · 零磁盘垃圾 · 内存流转**
 
-专为 Cloudflare 节点调优与出口质量体检打造的全能武器库。深度融合 **CDN 边缘入口优选**、**ProxyIP 反代出口挑选** 与 **节点双出站 IP 质量深度体检** 三大核心模块。无论是桌面端还是移动端，均采用独立原生路线，绝不混淆，开箱即用。
+专为 CF 节点调优与出口质量体检打造的全能武器库。深度融合 **CDN 边缘入口优选**、**ProxyIP 反代出口挑选** 与 **节点双出站 IP 质量深度体检** 三大核心模块。无论是桌面端还是移动端，均采用独立原生路线，绝不混淆，开箱即用。
 
 ---
 
@@ -56,8 +56,8 @@
 打开 Mac 终端（Terminal），依次执行：
 ```bash
 # 1. 克隆项目仓库到本地
-git clone https://github.com/Fengyi-cy/CloudflareSpeedTest-Pro.git
-cd CloudflareSpeedTest-Pro
+git clone https://github.com/Fengyi-cy/CF-Pulse.git
+cd CF-Pulse
 
 # 2. 为可执行启动脚本与测速核心赋予权限
 chmod +x "CF优选测速.app/Contents/MacOS/CF优选测速"
@@ -89,17 +89,14 @@ xattr -cr "CF优选测速.app"
 在手机上安装 **Termux**（推荐使用来自 [GitHub Releases](https://github.com/termux/termux-app/releases) 或 F-Droid 的官方稳定版本）。
 
 #### 2. 一键极速部署（Termux 终端）
-打开 Termux，依次粘贴执行以下三行命令：
+打开 Termux，依次粘贴执行以下两行命令：
 ```bash
-# 1. 更新环境并安装基础工具
-pkg update -y && pkg install gh git -y
+# 1. 更新环境并安装 git
+pkg update -y && pkg install git -y
 
-# 2. 授权登录 GitHub（因属于私有仓库，需按提示登录授权一次）
-gh auth login
-
-# 3. 克隆仓库并一键安装配置
-gh repo clone Fengyi-cy/CloudflareSpeedTest-Pro
-cd CloudflareSpeedTest-Pro && bash install_android.sh
+# 2. 克隆仓库并一键自动安装配置
+git clone https://github.com/Fengyi-cy/CF-Pulse.git
+cd CF-Pulse && bash install_android.sh
 ```
 
 > **自动化安装亮点**：
@@ -141,7 +138,7 @@ cd CloudflareSpeedTest-Pro && bash install_android.sh
 ## 📁 项目完整目录结构
 
 ```text
-CloudflareSpeedTest-Pro/
+CF-Pulse/
 ├── CF优选测速.app/                          # 🖥️ macOS 原生应用程序包 (Darwin 路线)
 │   └── Contents/
 │       ├── Info.plist                     # macOS App 元数据声明
@@ -185,5 +182,5 @@ CloudflareSpeedTest-Pro/
 
 ---
 
-## 🔒 许可与保密说明
-本项目仅供个人网络质量诊断、链路优选与网络拓扑研究使用。代码归属于专用私有仓库，请勿未经许可公开分发。
+## 🔒 开源协议与说明
+本项目仅供个人网络质量诊断、链路优选与网络拓扑研究使用。开源代码采用 MIT 协议发布，欢迎提交 Issue 与 Pull Request 共同完善。

@@ -5,9 +5,9 @@
     <key>CFBundleExecutable</key>
     <string>CF优选测速</string>
     <key>CFBundleIdentifier</key>
-    <string>com.cfst.pro.launcher</string>
+    <string>com.cf.pulse.launcher</string>
     <key>CFBundleName</key>
-    <string>CF优选测速</string>
+    <string>CF-Pulse</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

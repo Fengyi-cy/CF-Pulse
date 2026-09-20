@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CloudflareSpeedTest 本地 Web 启动器与专业控制面板
+CF-Pulse 本地 Web 启动器与专业控制面板
 多线程原生 Web 服务器，支持 IPv4/IPv6、多端口切换、高低频探测、多格式复制导出
 """
 
@@ -828,8 +828,8 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _serve_manifest(self):
         manifest = {
-            "name": "Cloudflare 节点优选与体检控制台",
-            "short_name": "CF优选测速",
+            "name": "CF-Pulse 节点优选与体检控制台",
+            "short_name": "CF-Pulse",
             "start_url": "/",
             "display": "standalone",
             "background_color": "#0f172a",
@@ -884,7 +884,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 def run_server():
     server = ThreadingHTTPServer(("0.0.0.0", PORT), RequestHandler)
-    print(f"CloudflareSpeedTest WebUI (Threading) 已就绪: http://127.0.0.1:{PORT} (局域网支持: http://0.0.0.0:{PORT})")
+    print(f"CF-Pulse WebUI (Threading) 已就绪: http://127.0.0.1:{PORT} (局域网支持: http://0.0.0.0:{PORT})")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
