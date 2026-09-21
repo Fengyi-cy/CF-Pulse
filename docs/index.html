@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CF-Pulse - 专为 CF 节点打造的极速测速、出口优选与网络体检控制台</title>
-  <meta name="description" content="让你的 Cloudflare 节点跑满网速、告别卡顿与 Error 1000 报错。多线程秒级探测 Anycast CDN 延迟、智能挑选高可用 ProxyIP 出口，一键深度体检双出站链路质量。">
+  <title>CF-Pulse — 专为 CF 节点打造的下一代极速测速与线路体检控制台</title>
+  <meta name="description" content="让你的 Cloudflare 节点跑满带宽、彻底告别卡顿与 Error 1000 报错。多线程秒级探测 Anycast CDN 延迟、智能筛选高可用 ProxyIP 出口，一键深度体检双出站链路质量。">
   
-  <!-- 字体预加载 -->
+  <!-- 字体预加载 (Inter + JetBrains Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,18 +18,24 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              amber: '#F38020',
-              glow: '#FAAD3F',
-              cyan: '#06B6D4',
-              emerald: '#10B981',
-              dark: '#060811',
-              card: '#0B1020',
-              cardBorder: 'rgba(255, 255, 255, 0.1)'
+            // 年轻、通透、高质感的电光蓝与冷霓虹色谱（彻底告别沉闷的土黄）
+            neon: {
+              cyan: '#00F0FF',
+              blue: '#3B82F6',
+              indigo: '#6366F1',
+              violet: '#8B5CF6',
+              emerald: '#10B981'
+            },
+            space: {
+              black: '#040711',
+              card: '#080E1E',
+              subtle: '#0E172D',
+              border: 'rgba(255, 255, 255, 0.08)',
+              borderHover: 'rgba(0, 240, 255, 0.3)'
             }
           },
           fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
             mono: ['"JetBrains Mono"', 'monospace']
           }
         }
@@ -38,175 +44,189 @@
   </script>
 
   <style>
-    /* 深邃夜空基底与激光漫反射 */
+    /* 深空冷光与未来感微精噪点网格 */
     body {
-      background-color: #05070E;
+      background-color: #03060E;
       background-image: 
-        radial-gradient(circle at 50% -10%, rgba(243, 128, 32, 0.2) 0%, transparent 60%),
-        radial-gradient(circle at 90% 30%, rgba(6, 182, 212, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 10% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 45%);
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.22), transparent),
+        radial-gradient(ellipse 60% 40% at 85% 60%, rgba(0, 240, 255, 0.08), transparent),
+        radial-gradient(ellipse 50% 30% at 10% 40%, rgba(139, 92, 246, 0.1), transparent);
       background-attachment: fixed;
     }
 
-    /* 3D 悬浮与多层光影 */
-    .glass-card {
-      background: rgba(11, 16, 32, 0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    /* 极简纤细发光边框与磨砂玻璃 */
+    .glow-card {
+      background: rgba(8, 14, 30, 0.65);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 
-        0 4px 20px rgba(0, 0, 0, 0.5),
-        0 1px 3px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0.5px rgba(255, 255, 255, 0.15);
+        0 1px 2px rgba(0, 0, 0, 0.4),
+        0 8px 32px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0.5px rgba(255, 255, 255, 0.12);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    
-    .glass-card:hover {
-      border-color: rgba(243, 128, 32, 0.4);
+    .glow-card:hover {
+      border-color: rgba(0, 240, 255, 0.3);
       box-shadow: 
-        0 8px 32px rgba(243, 128, 32, 0.12),
-        0 2px 6px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0.5px rgba(255, 255, 255, 0.25);
+        0 12px 40px rgba(0, 240, 255, 0.08),
+        0 2px 6px rgba(0, 0, 0, 0.5),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
     }
 
-    .glow-amber-primary {
+    /* 主行动按钮光晕 */
+    .btn-electric {
+      background: linear-gradient(135deg, #00F0FF 0%, #3B82F6 50%, #6366F1 100%);
       box-shadow: 
-        0 0 0 1px rgba(243, 128, 32, 0.8),
-        0 4px 20px rgba(243, 128, 32, 0.45),
-        inset 0 1px 1px rgba(255, 255, 255, 0.4);
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+        0 4px 20px rgba(0, 240, 255, 0.35);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-electric:hover {
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.4) inset,
+        0 6px 28px rgba(0, 240, 255, 0.55);
+      transform: translateY(-1px);
+    }
+    .btn-electric:active {
+      transform: translateY(0) scale(0.98);
     }
 
-    .glow-cyan-badge {
-      box-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+    /* 线性流动光效 */
+    @keyframes laser-flow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .laser-text {
+      background: linear-gradient(90deg, #FFFFFF 0%, #00F0FF 40%, #818CF8 75%, #FFFFFF 100%);
+      background-size: 200% auto;
+      color: transparent;
+      -webkit-background-clip: text;
+      animation: laser-flow 6s ease infinite;
     }
 
-    /* 弹簧触觉按钮 */
-    .btn-spring {
-      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* 弹簧触觉反馈 */
+    .spring-press {
+      transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .btn-spring:active {
+    .spring-press:active {
       transform: scale(0.96);
-    }
-
-    /* 测速表盘针旋转动画 */
-    #speed-needle {
-      transform-origin: 100px 100px;
-      transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    /* 呼吸光环 */
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 0.3; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .pulse-halo {
-      animation: pulse-ring 4s ease-in-out infinite;
     }
   </style>
 </head>
-<body class="text-slate-100 antialiased selection:bg-amber-500 selection:text-white relative min-h-screen flex flex-col font-sans">
+<body class="text-slate-200 antialiased selection:bg-cyan-500 selection:text-black relative min-h-screen flex flex-col font-sans">
 
-  <!-- 顶部导航栏 (Ultra Glass Nav) -->
-  <header class="sticky top-0 z-50 bg-[#05070E]/85 backdrop-blur-xl border-b border-white/[0.08]">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <a href="#" class="flex items-center space-x-3 group">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-400 flex items-center justify-center font-black text-sm text-slate-950 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
-          CF
+  <!-- 顶部悬浮胶囊导航 (Floating Capsule Nav - 极简轻盈) -->
+  <div class="fixed top-5 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
+    <header class="pointer-events-auto flex items-center justify-between px-5 py-2.5 rounded-full bg-[#080E20]/75 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/60 max-w-3xl w-full">
+      <!-- 品牌标识 -->
+      <a href="#" class="flex items-center space-x-2.5 group">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-500 flex items-center justify-center font-extrabold text-xs text-black shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+          ⚡
         </div>
         <div class="flex items-center space-x-2">
-          <span class="font-extrabold text-white text-lg tracking-tight">CF-Pulse</span>
-          <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wide">PRO</span>
+          <span class="font-extrabold text-white text-sm tracking-tight">CF-Pulse</span>
+          <span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">PRO</span>
         </div>
       </a>
 
-      <!-- 快捷菜单 -->
-      <nav class="hidden md:flex items-center space-x-8 text-xs font-semibold text-slate-300">
-        <a href="#speedtest-sandbox" class="hover:text-amber-400 transition-colors flex items-center space-x-1.5">
-          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span>实时极速表盘</span>
-        </a>
-        <a href="#dual-route-simulator" class="hover:text-cyan-400 transition-colors">双通道分流演示</a>
-        <a href="#global-radar" class="hover:text-white transition-colors">Anycast 骨干雷达</a>
-        <a href="#terminal-deploy" class="hover:text-white transition-colors">双端极速部署</a>
+      <!-- 锚点菜单 (极简细字) -->
+      <nav class="hidden sm:flex items-center space-x-6 text-xs font-medium text-slate-300">
+        <a href="#workbench" class="hover:text-cyan-300 transition-colors">测速工作台</a>
+        <a href="#topology" class="hover:text-cyan-300 transition-colors">双通道分流</a>
+        <a href="#intelligence" class="hover:text-cyan-300 transition-colors">骨干智选</a>
+        <a href="#terminal" class="hover:text-cyan-300 transition-colors">极速部署</a>
       </nav>
 
-      <!-- GitHub 按钮 -->
-      <div class="flex items-center space-x-3">
-        <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" rel="noopener noreferrer" class="btn-spring flex items-center space-x-2 px-4 py-2 rounded-full text-xs font-bold bg-white/10 hover:bg-white/15 text-white border border-white/15 hover:border-white/30 shadow-sm">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          <span>Star on GitHub</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/30 text-amber-300 font-mono font-black">v1.0</span>
+      <!-- 右侧 GitHub 胶囊按钮 -->
+      <div class="flex items-center space-x-2">
+        <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" rel="noopener noreferrer" class="spring-press flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/15">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>Star</span>
         </a>
       </div>
-    </div>
-  </header>
+    </header>
+  </div>
 
-  <!-- 主视觉区 (Hero Section - 电影级 3D 视觉与光晕) -->
-  <section class="relative pt-12 pb-20 md:pt-16 md:pb-28 overflow-hidden">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+  <!-- 首屏视觉区 (Hero Section - 纯净空间感与流光字体) -->
+  <section class="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-8">
       
-      <div class="text-center max-w-3xl mx-auto space-y-6">
-        <!-- 顶级光环标签 -->
-        <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-white/5 to-cyan-500/15 border border-amber-500/30 text-xs font-semibold text-amber-200 backdrop-blur-md shadow-lg shadow-amber-500/10">
-          <span class="flex h-2.5 w-2.5 relative">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-          </span>
-          <span>macOS &amp; Android 双端原生专属架构</span>
-          <span class="text-white/20">|</span>
-          <span class="text-emerald-400 font-mono font-bold text-[11px]">零磁盘垃圾 · 纯内存流转</span>
-        </div>
-
-        <!-- 震撼主标题 -->
-        <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white leading-[1.08]">
-          让你的 CF 节点跑满网速<br>
-          <span class="bg-gradient-to-r from-amber-300 via-orange-400 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">告别卡顿与 Error 1000 报错</span>
-        </h1>
-
-        <!-- 精炼副标题 (≤ 20 字) -->
-        <p class="text-base sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
-          秒级扫描 Anycast 延迟，挑选高可用 ProxyIP 出口，一键深度体检双出站链路质量。
-        </p>
-
-        <!-- 双行动按钮 -->
-        <div class="flex flex-wrap items-center justify-center gap-4 pt-4">
-          <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" class="btn-spring glow-amber-primary px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-sm flex items-center space-x-2.5 shadow-xl">
-            <span>进入 GitHub 开源仓库</span>
-            <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          </a>
-          <a href="#speedtest-sandbox" class="btn-spring px-8 py-3.5 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] text-white font-bold text-sm border border-white/15 flex items-center space-x-2 backdrop-blur-lg">
-            <span>⚡ 实时体验极速仪表盘</span>
-          </a>
-        </div>
+      <!-- 极客发光微标签 -->
+      <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-cyan-400/30 text-xs font-mono text-cyan-300 backdrop-blur-md shadow-lg shadow-cyan-500/10">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        <span>NEXT-GEN ANYCAST &amp; DUAL-ROUTE CONTROLLER</span>
       </div>
 
-      <!-- 核心 3D 双设备悬浮视觉焦点 (Dual-Device Hero Centerpiece) -->
-      <div class="mt-14 max-w-5xl mx-auto relative group">
-        <!-- 炫丽底层漫反射背景光 -->
-        <div class="absolute -inset-1.5 bg-gradient-to-r from-amber-500/20 via-cyan-500/20 to-orange-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition duration-1000"></div>
+      <!-- 冲击力主标题 (激光质感渐变) -->
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.08] max-w-4xl mx-auto">
+        让你的 CF 节点跑满网速<br>
+        <span class="laser-text">彻底告别卡顿与 Error 1000 回环</span>
+      </h1>
 
-        <div class="relative rounded-2xl overflow-hidden border border-white/20 glass-card p-2 sm:p-3 shadow-2xl">
-          <!-- 真实高清 3D 双端设备渲染图 -->
-          <div class="relative rounded-xl overflow-hidden aspect-[16/9] max-h-[540px] bg-slate-950">
-            <img src="assets/dual_device.jpg" alt="CF-Pulse macOS & Android 双端运行渲染图" class="w-full h-full object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out">
-            
-            <!-- 悬浮真实 HUD 数据标签 1 (左上) -->
-            <div class="absolute top-4 left-4 sm:top-6 sm:left-6 px-4 py-2.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-emerald-500/40 text-xs font-mono text-emerald-400 shadow-xl flex items-center space-x-2.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-              <span class="font-bold">ChatGPT / Gemini 100% 满血解锁</span>
-            </div>
+      <!-- 精炼副标题 -->
+      <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+        秒级扫描 Anycast 延迟，挑选高可用 ProxyIP 出口，一键深度体检双出站链路质量。
+      </p>
 
-            <!-- 悬浮真实 HUD 数据标签 2 (右上) -->
-            <div class="absolute top-4 right-4 sm:top-6 sm:right-6 px-4 py-2.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-amber-500/40 text-xs font-mono text-amber-300 shadow-xl flex items-center space-x-2">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-              <span>0-RTT 握手 · 28ms 极速直连</span>
-            </div>
+      <!-- 双核心行动按键 -->
+      <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
+        <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" class="btn-electric spring-press px-8 py-3.5 rounded-full text-slate-950 font-extrabold text-sm flex items-center space-x-2">
+          <span>进入 GitHub 仓库</span>
+          <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
+        <a href="#workbench" class="spring-press px-7 py-3.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-white font-semibold text-sm border border-white/10 flex items-center space-x-2 backdrop-blur-md">
+          <span>⚡ 打开测速工作台</span>
+        </a>
+      </div>
 
-            <!-- 悬浮真实 HUD 数据标签 3 (右下) -->
-            <div class="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 px-4 py-2.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-cyan-500/40 text-xs font-mono text-cyan-300 shadow-xl flex items-center space-x-2">
-              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-              <span>物理隔离 Error 1000 回环</span>
+      <!-- 核心视觉组件：纯代码打造的原生控制台悬浮 UI (拒绝大张贴图，纯代码纯组件) -->
+      <div class="mt-14 max-w-4xl mx-auto rounded-2xl glow-card p-4 sm:p-6 text-left space-y-6 relative group">
+        <!-- 窗口微顶栏 -->
+        <div class="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+            <span class="text-xs font-mono text-slate-400 ml-2">CF-Pulse v1.0 — Telemetry Master Control</span>
+          </div>
+          <div class="flex items-center space-x-2 text-[11px] font-mono text-cyan-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>SYSTEM LINKED · 0 丢包</span>
+          </div>
+        </div>
+
+        <!-- 三分式核心遥测矩阵 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+          <!-- 模块 1 -->
+          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+            <div class="text-[10px] text-slate-400 uppercase">CDN Anycast 入口</div>
+            <div class="text-xl font-bold text-white tracking-tight flex items-center justify-between">
+              <span>28.4 <span class="text-xs font-normal text-slate-400">ms</span></span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">极速直连</span>
             </div>
+            <div class="text-[11px] text-slate-400">104.16.89.24 · 圣何塞 SJC</div>
+          </div>
+
+          <!-- 模块 2 -->
+          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+            <div class="text-[10px] text-slate-400 uppercase">ProxyIP 反代旁路</div>
+            <div class="text-xl font-bold text-cyan-400 tracking-tight flex items-center justify-between">
+              <span>100% <span class="text-xs font-normal text-slate-400">隔离</span></span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold">切除回环</span>
+            </div>
+            <div class="text-[11px] text-slate-400">消灭 Error 1000 / 522 报错</div>
+          </div>
+
+          <!-- 模块 3 -->
+          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
+            <div class="text-[10px] text-slate-400 uppercase">顶级 AI 解锁矩阵</div>
+            <div class="text-xl font-bold text-indigo-400 tracking-tight flex items-center justify-between">
+              <span>满血 <span class="text-xs font-normal text-slate-400">通过</span></span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold">0 欺诈风险</span>
+            </div>
+            <div class="text-[11px] text-slate-400">ChatGPT · Gemini · Claude</div>
           </div>
         </div>
       </div>
@@ -214,182 +234,148 @@
     </div>
   </section>
 
-  <!-- 交互微应用 1：实时极速仪表盘沙盒 (Live Speedtest Sandbox) -->
-  <section id="speedtest-sandbox" class="py-20 bg-[#060A14] border-t border-white/[0.08] relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
+  <!-- 交互微应用 1：测速工作台 (Interactive Speed & Jitter Workbench) -->
+  <section id="workbench" class="py-20 bg-[#040814] border-t border-white/[0.06] relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
       
-      <div class="text-center space-y-3 max-w-2xl mx-auto">
-        <div class="inline-flex items-center space-x-2 text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-          <span>BENTO 3.0 INTERACTIVE BENCHMARK</span>
-        </div>
+      <div class="text-center space-y-3 max-w-xl mx-auto">
+        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Live Sandbox Benchmark</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          极速测速仪表盘互动沙盒
+          极速网络脉冲工作台
         </h2>
-        <p class="text-sm text-slate-400 leading-relaxed">
-          点击下方按钮，亲眼见证优选 Anycast 节点与多线程探针的极限吞吐表现。
+        <p class="text-sm text-slate-300 leading-relaxed">
+          点击启动压测，实时体验多线程并发探测 Anycast 握手、抖动与带宽吞吐能力。
         </p>
       </div>
 
-      <!-- 测速仪主角卡片 -->
-      <div class="max-w-4xl mx-auto rounded-3xl border border-white/15 glass-card p-8 sm:p-12 relative overflow-hidden">
-        <!-- 背景电光脉冲 -->
-        <div class="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+      <!-- 现代化深空磨砂工作台卡片 -->
+      <div class="max-w-3xl mx-auto rounded-3xl glow-card p-6 sm:p-10 space-y-8 relative overflow-hidden">
+        
+        <!-- 实时速度计与脉冲水波 -->
+        <div class="flex flex-col items-center justify-center space-y-6">
           
-          <!-- 表盘仪表 (SVG Gauge) -->
-          <div class="md:col-span-6 flex flex-col items-center justify-center space-y-4">
-            <div class="relative w-64 h-64 flex items-center justify-center">
-              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
-                <!-- 仪表盘底环刻度 -->
-                <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" stroke-dasharray="353" stroke-dashoffset="100" stroke-linecap="round"/>
-                <!-- 动态测速充能条 -->
-                <circle id="gauge-circle" cx="100" cy="100" r="75" fill="none" stroke="url(#amber-gradient)" stroke-width="12" stroke-dasharray="353" stroke-dashoffset="353" stroke-linecap="round" style="transition: stroke-dashoffset 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);"/>
-                
-                <defs>
-                  <linearGradient id="amber-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#06B6D4"/>
-                    <stop offset="60%" stop-color="#F38020"/>
-                    <stop offset="100%" stop-color="#F59E0B"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+          <!-- 速度刻度环 (纯 CSS/SVG 精准实现) -->
+          <div class="relative w-56 h-56 flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-dasharray="360" stroke-linecap="round"/>
+              <circle id="wb-gauge-bar" cx="100" cy="100" r="78" fill="none" stroke="url(#cyan-indigo-gradient)" stroke-width="10" stroke-dasharray="360" stroke-dashoffset="360" stroke-linecap="round" style="transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1);"/>
+              <defs>
+                <linearGradient id="cyan-indigo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00F0FF"/>
+                  <stop offset="60%" stop-color="#3B82F6"/>
+                  <stop offset="100%" stop-color="#8B5CF6"/>
+                </linearGradient>
+              </defs>
+            </svg>
 
-              <!-- 表盘正中实时数值 -->
-              <div class="absolute text-center">
-                <div id="live-speed-val" class="text-4xl font-black font-mono text-white tracking-tight">0.0</div>
-                <div class="text-xs font-mono font-bold text-amber-400 mt-0.5">Mbps 带宽</div>
-                <div id="speed-status-badge" class="mt-2 text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/10">
-                  STANDBY
-                </div>
+            <!-- 中心数值 -->
+            <div class="absolute text-center space-y-1">
+              <div id="wb-speed-num" class="text-5xl font-extrabold font-mono text-white tracking-tight">0.0</div>
+              <div class="text-[11px] font-mono text-cyan-300 font-bold uppercase tracking-wider">Mbps 实时吞吐</div>
+              <div id="wb-badge-status" class="inline-block text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/10">
+                READY
               </div>
-            </div>
-
-            <!-- 测速触发按钮 -->
-            <button type="button" onclick="triggerSpeedtestBenchmark()" id="btn-speedtest-run" class="btn-spring glow-amber-primary px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs flex items-center space-x-2">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              <span id="speedtest-btn-label">⚡ 触发节点全速压力探测</span>
-            </button>
-          </div>
-
-          <!-- 详细遥测指标卡 (右侧) -->
-          <div class="md:col-span-6 space-y-4">
-            <!-- 指标 1：延迟与抖动 -->
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
-              <div class="flex items-center justify-between text-xs text-slate-400">
-                <span class="font-medium">实时网络响应 (Latency &amp; Jitter)</span>
-                <span class="text-emerald-400 font-mono font-bold">0 丢包率</span>
-              </div>
-              <div class="flex items-baseline space-x-3">
-                <span id="stat-ping" class="text-3xl font-black font-mono text-emerald-400">--</span>
-                <span class="text-xs text-slate-400 font-mono">ms 延迟</span>
-                <span class="text-slate-600">/</span>
-                <span id="stat-jitter" class="text-lg font-bold font-mono text-slate-300">--</span>
-                <span class="text-xs text-slate-400 font-mono">ms 抖动</span>
-              </div>
-            </div>
-
-            <!-- 指标 2：机房节点匹配 -->
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
-              <div class="flex items-center justify-between text-xs text-slate-400">
-                <span class="font-medium">选定最优 Anycast 入口</span>
-                <span class="text-amber-400 font-mono text-[11px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">SJC-CORE</span>
-              </div>
-              <div class="font-mono text-sm text-slate-200 font-bold flex items-center justify-between">
-                <span>104.16.89.24:443</span>
-                <span class="text-xs text-slate-400">美国圣何塞 (直连光缆)</span>
-              </div>
-            </div>
-
-            <!-- 指标 3：双出站状态 -->
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-              <div>
-                <div class="text-xs font-medium text-slate-400">双出站 IP 隔离架构</div>
-                <div class="text-xs font-mono font-bold text-white mt-1">Worker 原生 + 纯数字 ProxyIP</div>
-              </div>
-              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">
-                100% HEALTHY
-              </span>
             </div>
           </div>
 
+          <!-- 交互触发按钮 -->
+          <button type="button" onclick="runWorkbenchSpeedtest()" id="wb-trigger-btn" class="btn-electric spring-press px-8 py-3 rounded-full text-slate-950 font-black text-xs flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span id="wb-btn-text">⚡ 开始并发极限压力测试</span>
+          </button>
         </div>
+
+        <!-- 实时四格网络遥测面板 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-center">
+          <div class="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div class="text-[10px] text-slate-400">平均延迟</div>
+            <div id="wb-val-ping" class="text-xl font-bold text-cyan-300 mt-1">--</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">ms (Ping)</div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div class="text-[10px] text-slate-400">抖动波动</div>
+            <div id="wb-val-jitter" class="text-xl font-bold text-slate-200 mt-1">--</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">ms (Jitter)</div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div class="text-[10px] text-slate-400">丢包率</div>
+            <div id="wb-val-loss" class="text-xl font-bold text-emerald-400 mt-1">--</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Packet Loss</div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
+            <div class="text-[10px] text-slate-400">探测线程</div>
+            <div id="wb-val-threads" class="text-xl font-bold text-indigo-400 mt-1">--</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Threads</div>
+          </div>
+        </div>
+
       </div>
 
     </div>
   </section>
 
-  <!-- 交互微应用 2：双通道出站流向动态模拟器 (Dual-Route Visual Simulator) -->
-  <section id="dual-route-simulator" class="py-20 relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
+  <!-- 交互微应用 2：双通道分流动态拓扑 (Dual-Route Visual Inspector) -->
+  <section id="topology" class="py-20 relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
       
-      <div class="text-center space-y-3 max-w-2xl mx-auto">
-        <div class="inline-flex items-center space-x-2 text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-          <span>DUAL-ROUTE TOPOLOGY SIMULATOR</span>
-        </div>
+      <div class="text-center space-y-3 max-w-xl mx-auto">
+        <div class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Topology Routing Simulator</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
           双通道分流动态拓扑
         </h2>
-        <p class="text-sm text-slate-400 leading-relaxed">
-          点击切换不同目标网站，实时观看数据包如何在不同路径上智能流转，彻底消灭 Error 1000 报错。
+        <p class="text-sm text-slate-300 leading-relaxed">
+          点击切换目标网站，看网络数据包如何精准分流，彻底抹平 Error 1000 报错。
         </p>
       </div>
 
-      <!-- 模拟器大视窗卡片 -->
-      <div class="max-w-5xl mx-auto rounded-3xl border border-white/15 glass-card p-6 sm:p-10 space-y-8">
+      <div class="max-w-4xl mx-auto rounded-3xl glow-card p-6 sm:p-10 space-y-8">
         
-        <!-- 切换控制器 -->
-        <div class="flex flex-wrap items-center justify-center gap-4">
-          <button type="button" onclick="selectSimulatorTarget('non-cf')" id="sim-btn-noncf" class="btn-spring px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-lg shadow-amber-500/20 flex items-center space-x-2">
-            <span>🎯 访问非 CF 网站 (Google / YouTube)</span>
+        <!-- 切换胶囊控制器 -->
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <button type="button" onclick="setSimMode('non-cf')" id="sim-tab-noncf" class="spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-cyan-500 text-slate-950 border border-cyan-400 shadow-lg shadow-cyan-500/25">
+            🎯 目标 A：非 CF 网站 (Google / YouTube)
           </button>
-          <button type="button" onclick="selectSimulatorTarget('cf')" id="sim-btn-cf" class="btn-spring px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 flex items-center space-x-2">
-            <span>🛡️ 访问 CF 保护网站 (ChatGPT / Discord)</span>
+          <button type="button" onclick="setSimMode('cf')" id="sim-tab-cf" class="spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10">
+            🛡️ 目标 B：CF 保护网站 (ChatGPT / Discord)
           </button>
         </div>
 
-        <!-- 拓扑流程图卡片 -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center font-mono">
-          <!-- Step 1: 客户端 -->
-          <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-center md:text-left">
-            <div class="text-[10px] text-amber-400 uppercase font-bold tracking-wider">Step 01 · 客户端</div>
-            <div class="text-sm font-bold text-white">Your Device</div>
-            <div class="text-xs text-slate-400">优选 Anycast 入口</div>
-            <div class="pt-2 text-[11px] text-emerald-400">● 极速进站 (32ms)</div>
+        <!-- 4 步流转卡片 -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 font-mono text-xs">
+          <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+            <span class="text-[9px] text-cyan-400 uppercase font-bold">01 · 发起</span>
+            <div class="font-bold text-white mt-1">本地客户端</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">优选 Anycast 入口</div>
           </div>
 
-          <!-- Step 2: CF 边缘中枢 -->
-          <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2 text-center md:text-left relative">
-            <div class="text-[10px] text-amber-300 uppercase font-bold tracking-wider">Step 02 · 边缘网关</div>
-            <div class="text-sm font-bold text-white">Cloudflare Edge</div>
-            <div class="text-xs text-slate-300">V8 智能分流引擎</div>
-            <div class="pt-2 text-[11px] text-amber-300">● 毫秒级意图识别</div>
+          <div class="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-center">
+            <span class="text-[9px] text-cyan-300 uppercase font-bold">02 · 调度</span>
+            <div class="font-bold text-white mt-1">Cloudflare Edge</div>
+            <div class="text-[11px] text-cyan-300 mt-0.5">V8 智能意图识别</div>
           </div>
 
-          <!-- Step 3: 分流通道 -->
-          <div id="sim-path-card" class="p-5 rounded-2xl bg-white/[0.03] border border-emerald-500/40 space-y-2 text-center md:text-left transition-all duration-500">
-            <div id="sim-path-step" class="text-[10px] text-emerald-400 uppercase font-bold tracking-wider">Step 03 · 出口路径</div>
-            <div id="sim-path-title" class="text-sm font-bold text-white">Worker 原生出口</div>
-            <div id="sim-path-desc" class="text-xs text-slate-400">直连放行 (104.28.x.x)</div>
-            <div id="sim-path-status" class="pt-2 text-[11px] text-emerald-400">● 原生高速管道</div>
+          <div id="route-step-box" class="p-4 rounded-2xl bg-white/[0.02] border border-emerald-500/40 text-center transition-all">
+            <span id="route-step-label" class="text-[9px] text-emerald-400 uppercase font-bold">03 · 直连出口</span>
+            <div id="route-step-title" class="font-bold text-white mt-1">Worker 原生出口</div>
+            <div id="route-step-ip" class="text-[11px] text-slate-400 mt-0.5">104.28.x.x (极速放行)</div>
           </div>
 
-          <!-- Step 4: 目标网站 -->
-          <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-center md:text-left">
-            <div class="text-[10px] text-cyan-400 uppercase font-bold tracking-wider">Step 04 · 目标抵达</div>
-            <div id="sim-dest-title" class="text-sm font-bold text-white">Google / YouTube</div>
-            <div class="text-xs text-slate-400">顺利渲染无阻隔</div>
-            <div class="pt-2 text-[11px] text-cyan-400">● 响应耗时 82ms</div>
+          <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+            <span class="text-[9px] text-indigo-400 uppercase font-bold">04 · 抵达</span>
+            <div id="route-step-dest" class="font-bold text-white mt-1">Google / YouTube</div>
+            <div class="text-[11px] text-emerald-400 mt-0.5">● 满血高速加载</div>
           </div>
         </div>
 
-        <!-- 详细原理解说卡 -->
-        <div id="sim-narrative-box" class="p-6 rounded-2xl bg-[#080D1A] border border-white/10 text-xs sm:text-sm text-slate-300 leading-relaxed space-y-2">
-          <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span>原生出口直连模式：极速高吞吐</span>
+        <!-- 说明底卡 -->
+        <div id="route-explainer" class="p-5 rounded-2xl bg-[#060914] border border-white/5 text-xs text-slate-300 leading-relaxed font-mono space-y-1">
+          <div class="text-emerald-400 font-bold flex items-center space-x-1.5">
+            <span>● 原生出口直连机制：</span>
           </div>
-          <p>目标网站不属于 Cloudflare，Worker 允许直接发起对外 TCP 连接。数据通过 Cloudflare 原生骨干网直达 Google，速度最快、延迟最低，无需中继代理参与。</p>
+          <p class="text-slate-400">目标网站不属于 Cloudflare 托管，Worker 允许直接发起出站 TCP 连接，走 Cloudflare 原生骨干网直飞目标，延迟最低、带宽跑满。</p>
         </div>
 
       </div>
@@ -397,188 +383,166 @@
     </div>
   </section>
 
-  <!-- 交互微应用 3：全球 Anycast 骨干雷达 (Global Radar Map) -->
-  <section id="global-radar" class="py-20 bg-[#060A14] border-t border-white/[0.08] relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
+  <!-- 交互微应用 3：全球 Anycast 骨干智选 (Anycast Intelligence) -->
+  <section id="intelligence" class="py-20 bg-[#040814] border-t border-white/[0.06] relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
       
-      <div class="text-center space-y-3 max-w-2xl mx-auto">
-        <div class="inline-flex items-center space-x-2 text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-          <span>ANYCAST GLOBAL TELEMETRY</span>
-        </div>
+      <div class="text-center space-y-3 max-w-xl mx-auto">
+        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Anycast Backbone Telemetry</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          全球 Anycast 骨干机房雷达
+          全球 Anycast 骨干智选
         </h2>
-        <p class="text-sm text-slate-400 leading-relaxed">
-          点击不同机房节点，揭秘为什么移动/电信网络下美西圣何塞直连（136ms）比绕美假香港（208ms）更优。
+        <p class="text-sm text-slate-300 leading-relaxed">
+          为什么移动与电信网络下，直连美西反而比绕美假香港更稳定？点击实测揭晓真相：
         </p>
       </div>
 
-      <div class="max-w-5xl mx-auto rounded-3xl border border-white/15 glass-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-        
-        <!-- 左侧高科技地图视觉 (带真实光影背景) -->
-        <div class="lg:col-span-7 relative min-h-[320px] sm:min-h-[420px] bg-slate-950 overflow-hidden">
-          <img src="assets/hero_bg.jpg" alt="Cloudflare 全球骨干 Anycast 雷达地图" class="w-full h-full object-cover object-center opacity-85">
-          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0B1020] hidden lg:block"></div>
-          
-          <!-- 悬浮点击热点 -->
-          <div class="absolute inset-0 p-6 flex flex-col justify-between pointer-events-none">
-            <div class="inline-block px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur border border-white/15 text-[11px] font-mono text-slate-300 w-max">
-              INTERACTIVE GLOBAL ROUTE PROBE
-            </div>
-            <div class="text-[11px] font-mono text-slate-400 bg-slate-950/80 p-2.5 rounded-xl border border-white/10 backdrop-blur w-max">
-              点击右侧机房标签，即刻破译跨国光缆走向
-            </div>
+      <!-- 智能节点比选面板 -->
+      <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- 节点 1：美西圣何塞 -->
+        <div onclick="selectColoCard('sjc')" id="card-sjc" class="p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-cyan-500/40 bg-cyan-500/[0.03]">
+          <div class="flex items-center justify-between">
+            <span class="text-2xl">🇺🇸</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">推荐首选</span>
           </div>
+          <div>
+            <div class="text-base font-extrabold text-white">SJC · 美国圣何塞</div>
+            <div class="text-xs text-slate-400 font-mono mt-0.5">中美海底直连光缆 (NCP/TPE)</div>
+          </div>
+          <div class="pt-2 flex items-baseline justify-between border-t border-white/5 font-mono">
+            <span class="text-xs text-slate-400">实测延迟</span>
+            <span class="text-2xl font-black text-emerald-400">136 ms</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">直线跨洋无绕路，带宽量大管饱，晚高峰极度稳定，完美支持 OpenAI 满血解锁！</p>
         </div>
 
-        <!-- 右侧机房切换选项卡与底层路由剖析 -->
-        <div class="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between space-y-6">
-          <div class="space-y-3">
-            <div class="text-xs font-mono font-bold text-slate-400 uppercase">选择目标数据中心 (Colo)</div>
-            
-            <div class="space-y-2">
-              <button type="button" onclick="selectColoNode('sjc')" id="colo-btn-sjc" class="w-full p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-left flex items-center justify-between transition-all">
-                <div class="flex items-center space-x-2.5">
-                  <span class="text-base">🇺🇸</span>
-                  <div>
-                    <div class="text-xs font-bold text-white font-mono">SJC · 美国圣何塞</div>
-                    <div class="text-[10px] text-emerald-400 font-mono">推荐直连 (太平洋直达海缆)</div>
-                  </div>
-                </div>
-                <span class="font-mono text-xs font-bold text-emerald-400">136ms</span>
-              </button>
-
-              <button type="button" onclick="selectColoNode('hkg')" id="colo-btn-hkg" class="w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 text-left flex items-center justify-between hover:bg-white/[0.06] transition-all">
-                <div class="flex items-center space-x-2.5">
-                  <span class="text-base">🇭🇰</span>
-                  <div>
-                    <div class="text-xs font-bold text-slate-200 font-mono">HKG · 中国香港 (绕美)</div>
-                    <div class="text-[10px] text-amber-400 font-mono">CMI 绕路 (先洛杉矶后香港)</div>
-                  </div>
-                </div>
-                <span class="font-mono text-xs font-bold text-amber-400">208ms</span>
-              </button>
-
-              <button type="button" onclick="selectColoNode('nrt')" id="colo-btn-nrt" class="w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 text-left flex items-center justify-between hover:bg-white/[0.06] transition-all">
-                <div class="flex items-center space-x-2.5">
-                  <span class="text-base">🇯🇵</span>
-                  <div>
-                    <div class="text-xs font-bold text-slate-200 font-mono">NRT · 日本东京</div>
-                    <div class="text-[10px] text-rose-400 font-mono">无普通免费直连通道</div>
-                  </div>
-                </div>
-                <span class="font-mono text-xs font-bold text-rose-400">342ms</span>
-              </button>
-            </div>
+        <!-- 节点 2：中国香港 -->
+        <div onclick="selectColoCard('hkg')" id="card-hkg" class="p-6 rounded-3xl glow-card cursor-pointer space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-2xl">🇭🇰</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">CMI 绕路</span>
           </div>
-
-          <!-- 机房路由分析说明卡 -->
-          <div id="colo-analysis-box" class="p-4 rounded-xl bg-[#080C16] border border-white/10 text-xs text-slate-300 leading-relaxed font-mono space-y-1">
-            <div class="text-amber-400 font-bold flex items-center space-x-1.5">
-              <span>● 圣何塞路由特征：</span>
-            </div>
-            <p class="text-slate-400">中美海底直连光缆（NCP/TPE）量大管饱，单直线直飞加州，晚高峰抗压性能极其强悍，且完美支持 OpenAI 全功能！</p>
+          <div>
+            <div class="text-base font-extrabold text-slate-200">HKG · 中国香港 (绕美)</div>
+            <div class="text-xs text-slate-400 font-mono mt-0.5">先洛杉矶后香港 (大回环)</div>
           </div>
+          <div class="pt-2 flex items-baseline justify-between border-t border-white/5 font-mono">
+            <span class="text-xs text-slate-400">实测延迟</span>
+            <span class="text-2xl font-black text-amber-400">208 ms</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">看似离得近，实则跨太平洋打了个来回，极易丢包，且 OpenAI 官方不支持香港地区。</p>
         </div>
 
+        <!-- 节点 3：日本东京 -->
+        <div onclick="selectColoCard('nrt')" id="card-nrt" class="p-6 rounded-3xl glow-card cursor-pointer space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-2xl">🇯🇵</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30">无直连通道</span>
+          </div>
+          <div>
+            <div class="text-base font-extrabold text-slate-200">NRT · 日本东京</div>
+            <div class="text-xs text-slate-400 font-mono mt-0.5">普通宽带无免费直达海缆</div>
+          </div>
+          <div class="pt-2 flex items-baseline justify-between border-t border-white/5 font-mono">
+            <span class="text-xs text-slate-400">实测延迟</span>
+            <span class="text-2xl font-black text-rose-400">342 ms</span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">缺乏廉价对等互联，流量被强制重定向发配，测速工具会自动将其剔除淘汰。</p>
+        </div>
       </div>
 
     </div>
   </section>
 
-  <!-- 交互微应用 4：双端极速终端部署 (Hacker Console) -->
-  <section id="terminal-deploy" class="py-20 relative">
+  <!-- 交互微应用 4：双端极速终端部署 (Terminal Deploy) -->
+  <section id="terminal" class="py-20 relative">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-8">
       
       <div class="text-center space-y-3 max-w-xl mx-auto">
-        <div class="inline-flex items-center space-x-2 text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-          <span>ZERO-CONFIG DEPLOYMENT</span>
-        </div>
+        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Zero-Friction CLI Setup</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          极速安装与干净卸载
+          极速安装与纯净卸载
         </h2>
-        <p class="text-sm text-slate-400 leading-relaxed">
-          采用物理隔离的双轨架构，Mac 端双击即开，安卓端 Termux 一键自动化配置。
+        <p class="text-sm text-slate-300 leading-relaxed">
+          全平台原生支持，零多余依赖，不向系统注册表留存任何隐蔽文件。
         </p>
       </div>
 
-      <!-- 拟物极客终端视窗 (Hacker Terminal Window) -->
-      <div class="rounded-3xl bg-[#080C16] border border-white/20 glass-card overflow-hidden shadow-2xl">
-        
+      <!-- 拟物极客终端 (Obsidian Dark Glass Terminal) -->
+      <div class="rounded-3xl glow-card overflow-hidden">
         <!-- 终端顶栏 -->
-        <div class="px-6 py-4 bg-[#090D18] border-b border-white/[0.08] flex items-center justify-between">
+        <div class="px-6 py-4 bg-[#050914] border-b border-white/[0.08] flex items-center justify-between">
           <div class="flex items-center space-x-3">
             <div class="flex space-x-2">
-              <div class="w-3.5 h-3.5 rounded-full bg-[#FF5F56] border border-[#E0443E]"></div>
-              <div class="w-3.5 h-3.5 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
-              <div class="w-3.5 h-3.5 rounded-full bg-[#27C93F] border border-[#1AAB29]"></div>
+              <div class="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+              <div class="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+              <div class="w-3 h-3 rounded-full bg-[#27C93F]"></div>
             </div>
-            <span class="text-xs font-mono text-slate-400 hidden sm:inline">bash — cf-pulse-installer</span>
+            <span class="text-xs font-mono text-slate-400 ml-2">terminal — zsh</span>
           </div>
 
-          <!-- 平台切换 Pills -->
-          <div class="flex p-1 rounded-xl bg-white/[0.05] border border-white/10 font-mono text-xs">
-            <button type="button" onclick="setConsoleTab('mac')" id="console-tab-mac" class="px-3.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition-all">
-              macOS
+          <!-- 平台选项胶囊 -->
+          <div class="flex p-1 rounded-full bg-white/[0.06] border border-white/10 font-mono text-xs">
+            <button type="button" onclick="setTerminalTab('mac')" id="term-tab-mac" class="px-4 py-1 rounded-full bg-cyan-500 text-slate-950 font-bold transition-all">
+              macOS 原生 App
             </button>
-            <button type="button" onclick="setConsoleTab('android')" id="console-tab-android" class="px-3.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all">
-              Android
+            <button type="button" onclick="setTerminalTab('android')" id="term-tab-android" class="px-4 py-1 rounded-full text-slate-400 hover:text-white transition-all">
+              Android (Termux)
             </button>
           </div>
 
-          <!-- 一键复制代码按钮 -->
-          <button type="button" onclick="copyConsoleSnippet()" class="btn-spring px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold flex items-center space-x-1.5 border border-white/15">
+          <!-- 复制代码按钮 -->
+          <button type="button" onclick="copyTerminalCode()" class="spring-press px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-white text-xs font-semibold flex items-center space-x-1.5 border border-white/15">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-            <span id="console-copy-label">复制代码</span>
+            <span id="term-copy-text">复制代码</span>
           </button>
         </div>
 
-        <!-- 终端命令区 -->
-        <div class="p-6 sm:p-8 bg-[#060810] font-mono text-xs sm:text-sm overflow-x-auto">
-          <pre id="console-snippet-mac" class="text-slate-200 leading-relaxed"><code><span class="text-slate-500"># 1. 克隆官方开源仓库</span>
+        <!-- 命令代码区 -->
+        <div class="p-6 sm:p-8 bg-[#03060E] font-mono text-xs sm:text-sm overflow-x-auto">
+          <pre id="term-code-mac" class="text-slate-200 leading-relaxed"><code><span class="text-slate-500"># 1. 克隆项目仓库</span>
 git clone https://github.com/Fengyi-cy/CF-Pulse.git
 cd CF-Pulse
 
-<span class="text-slate-500"># 2. 为启动器赋予权限并解除 macOS Gatekeeper 隔离</span>
+<span class="text-slate-500"># 2. 为可执行启动脚本与核心引擎赋予权限</span>
 chmod +x "CF优选测速.app/Contents/MacOS/CF优选测速"
 chmod +x "CF优选测速.app/Contents/Resources/CloudflareSpeedTest/cfst"
 xattr -cr "CF优选测速.app"
 
-<span class="text-slate-500"># 3. 运行体验：访达中直接双击 CF优选测速.app 即可秒级唤起控制台！</span></code></pre>
+<span class="text-slate-500"># 3. 双击 CF优选测速.app 即可自动在后台启动并唤起控制台！</span></code></pre>
 
-          <pre id="console-snippet-android" class="text-slate-200 leading-relaxed hidden"><code><span class="text-slate-500"># 1. Termux 更新运行依赖</span>
+          <pre id="term-code-android" class="text-slate-200 leading-relaxed hidden"><code><span class="text-slate-500"># 1. Termux 更新基础环境</span>
 pkg update -y &amp;&amp; pkg install git -y
 
-<span class="text-slate-500"># 2. 克隆仓库并一键自动部署</span>
+<span class="text-slate-500"># 2. 一键自动化部署配置</span>
 git clone https://github.com/Fengyi-cy/CF-Pulse.git
 cd CF-Pulse &amp;&amp; bash install_android.sh
 
-<span class="text-slate-500"># 部署完成自动注册全局 cfst 命令，支持 PWA 独立全屏应用与桌面小部件！</span></code></pre>
+<span class="text-slate-500"># 部署后自动注册全局 cfst 命令，并支持桌面微件一键静默拉起！</span></code></pre>
         </div>
 
-        <!-- 纯净卸载说明 -->
-        <div class="px-6 sm:px-8 py-4 bg-[#090D18] border-t border-white/[0.08] flex flex-wrap items-center justify-between text-xs text-slate-400">
+        <!-- 纯净卸载提醒 -->
+        <div class="px-6 py-3.5 bg-[#050914] border-t border-white/[0.08] flex flex-wrap items-center justify-between text-xs text-slate-400">
           <div class="flex items-center space-x-2">
-            <span class="text-amber-400 font-bold">🗑️ 纯净卸载：</span>
-            <span>Mac 将 App 扔进废纸篓即可；安卓 Termux 执行一行命令 100% 抹去，零磁盘残留。</span>
+            <span class="text-cyan-400 font-bold">🗑️ 彻底卸载与清理：</span>
+            <span>Mac 直接将 App 移入废纸篓；安卓 Termux 执行一行命令一键抹平。</span>
           </div>
-          <span class="font-mono text-[10px] text-slate-500 uppercase tracking-wider">ZERO ACCUMULATED JUNK</span>
+          <span class="font-mono text-[10px] text-slate-500">ZERO DISK RESIDUE</span>
         </div>
-
       </div>
 
     </div>
   </section>
 
-  <!-- 开源鸣谢与底栏 (Footer) -->
-  <footer class="mt-auto py-12 bg-[#04060C] border-t border-white/10 text-xs text-slate-400">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+  <!-- 开源致敬与底栏 (Footer) -->
+  <footer class="mt-auto py-12 bg-[#02040A] border-t border-white/[0.08] text-xs text-slate-400">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- 品牌简介 -->
         <div class="space-y-3">
-          <div class="flex items-center space-x-2.5 text-white font-bold text-base">
-            <div class="w-6 h-6 rounded-lg bg-amber-500 flex items-center justify-center text-xs text-slate-950 font-black">CF</div>
+          <div class="flex items-center space-x-2.5 text-white font-extrabold text-base">
+            <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-400 to-blue-500 flex items-center justify-center text-xs text-black font-black">⚡</div>
             <span>CF-Pulse Open Source</span>
           </div>
           <p class="leading-relaxed text-slate-400">
@@ -590,24 +554,24 @@ cd CF-Pulse &amp;&amp; bash install_android.sh
         <div class="space-y-3">
           <div class="text-white font-semibold">致敬核心开源项目</div>
           <ul class="space-y-2">
-            <li><a href="https://github.com/XIU2/CloudflareSpeedTest" target="_blank" class="hover:text-amber-400 transition-colors flex items-center space-x-1.5"><span class="text-amber-400">·</span><span>XIU2 / CloudflareSpeedTest (高性能 Anycast 测速核心)</span></a></li>
-            <li><a href="https://github.com/xgonce/Cloudflare_IP" target="_blank" class="hover:text-amber-400 transition-colors flex items-center space-x-1.5"><span class="text-amber-400">·</span><span>xgonce / Cloudflare_IP (高频维护活跃 ProxyIP 数据库)</span></a></li>
-            <li><a href="https://github.com/termux/termux-app" target="_blank" class="hover:text-amber-400 transition-colors flex items-center space-x-1.5"><span class="text-amber-400">·</span><span>Termux &amp; Termux:Widget (Android 原生运行时环境)</span></a></li>
+            <li><a href="https://github.com/XIU2/CloudflareSpeedTest" target="_blank" class="hover:text-cyan-400 transition-colors flex items-center space-x-1.5"><span class="text-cyan-400">·</span><span>XIU2 / CloudflareSpeedTest (测速核心)</span></a></li>
+            <li><a href="https://github.com/xgonce/Cloudflare_IP" target="_blank" class="hover:text-cyan-400 transition-colors flex items-center space-x-1.5"><span class="text-cyan-400">·</span><span>xgonce / Cloudflare_IP (活跃 ProxyIP 库)</span></a></li>
+            <li><a href="https://github.com/termux/termux-app" target="_blank" class="hover:text-cyan-400 transition-colors flex items-center space-x-1.5"><span class="text-cyan-400">·</span><span>Termux &amp; Termux:Widget (Android 运行时)</span></a></li>
           </ul>
         </div>
 
-        <!-- 协议与纯净度保证 -->
+        <!-- 协议与隐私保证 -->
         <div class="space-y-3">
-          <div class="text-white font-semibold">开源许可与绝对隐私承诺</div>
+          <div class="text-white font-semibold">开源许可与无隐私搜集</div>
           <p class="leading-relaxed">
-            本项目采用 <a href="https://github.com/Fengyi-cy/CF-Pulse/blob/main/LICENSE" class="text-amber-400 hover:underline">MIT 许可协议</a> 发布。全部探测在本地设备内存中闭环运行，无任何第三方中心化服务器介入，绝对零隐私搜集。
+            本项目基于 <a href="https://github.com/Fengyi-cy/CF-Pulse/blob/main/LICENSE" class="text-cyan-400 hover:underline">MIT 协议</a> 开源。所有测速与探针均在本地内存中运行，绝对零隐私搜集。
           </p>
         </div>
       </div>
 
-      <div class="pt-8 border-t border-white/5 flex flex-wrap items-center justify-between gap-4 text-slate-500">
-        <p>© 2026 CF-Pulse. High-speed Anycast &amp; Dual-Route Inspector.</p>
-        <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" class="text-slate-400 hover:text-white flex items-center space-x-1 font-mono">
+      <div class="pt-8 border-t border-white/5 flex flex-wrap items-center justify-between gap-4 text-slate-500 font-mono">
+        <p>© 2026 CF-Pulse. Built for extreme network speed.</p>
+        <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" class="text-slate-400 hover:text-white flex items-center space-x-1">
           <span>GitHub: Fengyi-cy/CF-Pulse</span>
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
         </a>
@@ -616,170 +580,151 @@ cd CF-Pulse &amp;&amp; bash install_android.sh
     </div>
   </footer>
 
-  <!-- 核心交互交互脚本 -->
+  <!-- 交互功能 JS -->
   <script>
-    // 1. 实时极速表盘模拟逻辑
-    let isSpeedtesting = false;
-    function triggerSpeedtestBenchmark() {
-      if (isSpeedtesting) return;
-      isSpeedtesting = true;
+    // 1. 测速工作台模拟压测
+    let wbTesting = false;
+    function runWorkbenchSpeedtest() {
+      if (wbTesting) return;
+      wbTesting = true;
 
-      const circle = document.getElementById('gauge-circle');
-      const speedVal = document.getElementById('live-speed-val');
-      const statusBadge = document.getElementById('speed-status-badge');
-      const btnLabel = document.getElementById('speedtest-btn-label');
-      const pingVal = document.getElementById('stat-ping');
-      const jitterVal = document.getElementById('stat-jitter');
+      const circle = document.getElementById('wb-gauge-bar');
+      const num = document.getElementById('wb-speed-num');
+      const statusBadge = document.getElementById('wb-badge-status');
+      const btnText = document.getElementById('wb-btn-text');
+      const pingVal = document.getElementById('wb-val-ping');
+      const jitterVal = document.getElementById('wb-val-jitter');
+      const lossVal = document.getElementById('wb-val-loss');
+      const threadVal = document.getElementById('wb-val-threads');
 
-      btnLabel.innerText = '正在执行全速并发测压...';
-      statusBadge.innerText = 'TESTING (48 THREADS)';
-      statusBadge.className = 'mt-2 text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+      btnText.innerText = '正在进行全速并发压测...';
+      statusBadge.innerText = 'TESTING...';
+      statusBadge.className = 'inline-block text-[9px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 animate-pulse';
 
-      // 动态加速动画
-      let currentVal = 0;
-      const targetSpeed = Math.floor(820 + Math.random() * 80); // ~860 Mbps
-      const targetOffset = 353 - (targetSpeed / 1000) * 353;
-
+      const targetSpeed = Math.floor(820 + Math.random() * 90);
+      const targetOffset = 360 - (targetSpeed / 1000) * 360;
       circle.style.strokeDashoffset = targetOffset;
 
-      const interval = setInterval(() => {
-        currentVal += Math.floor(Math.random() * 45) + 20;
-        if (currentVal >= targetSpeed) {
-          currentVal = targetSpeed;
-          clearInterval(interval);
-          
-          speedVal.innerText = currentVal.toFixed(1);
-          pingVal.innerText = Math.floor(26 + Math.random() * 5);
-          jitterVal.innerText = (0.8 + Math.random() * 0.4).toFixed(1);
+      let current = 0;
+      const timer = setInterval(() => {
+        current += Math.floor(Math.random() * 50) + 20;
+        if (current >= targetSpeed) {
+          current = targetSpeed;
+          clearInterval(timer);
 
-          statusBadge.innerText = '800+ MBPS PEAK CAP';
-          statusBadge.className = 'mt-2 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-          btnLabel.innerText = '⚡ 再次测试极限性能';
-          isSpeedtesting = false;
+          num.innerText = current.toFixed(1);
+          pingVal.innerText = Math.floor(26 + Math.random() * 5);
+          jitterVal.innerText = (0.7 + Math.random() * 0.4).toFixed(1);
+          lossVal.innerText = '0.0%';
+          threadVal.innerText = '48';
+
+          statusBadge.innerText = 'PEAK: ' + current.toFixed(1) + ' Mbps';
+          statusBadge.className = 'inline-block text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold';
+          btnText.innerText = '⚡ 再次运行压力测试';
+          wbTesting = false;
         } else {
-          speedVal.innerText = currentVal.toFixed(1);
+          num.innerText = current.toFixed(1);
         }
-      }, 40);
+      }, 35);
     }
 
-    // 2. 双通道拓扑模拟器
-    function selectSimulatorTarget(target) {
-      const btnNonCf = document.getElementById('sim-btn-noncf');
-      const btnCf = document.getElementById('sim-btn-cf');
-      const pathCard = document.getElementById('sim-path-card');
-      const pathTitle = document.getElementById('sim-path-title');
-      const pathDesc = document.getElementById('sim-path-desc');
-      const pathStatus = document.getElementById('sim-path-status');
-      const destTitle = document.getElementById('sim-dest-title');
-      const narrative = document.getElementById('sim-narrative-box');
+    // 2. 双通道拓扑交互
+    function setSimMode(mode) {
+      const btnNonCf = document.getElementById('sim-tab-noncf');
+      const btnCf = document.getElementById('sim-tab-cf');
+      const stepBox = document.getElementById('route-step-box');
+      const stepLabel = document.getElementById('route-step-label');
+      const stepTitle = document.getElementById('route-step-title');
+      const stepIp = document.getElementById('route-step-ip');
+      const stepDest = document.getElementById('route-step-dest');
+      const explainer = document.getElementById('route-explainer');
 
-      if (target === 'non-cf') {
-        btnNonCf.className = "btn-spring px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-lg shadow-amber-500/20 flex items-center space-x-2";
-        btnCf.className = "btn-spring px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 flex items-center space-x-2";
+      if (mode === 'non-cf') {
+        btnNonCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-cyan-500 text-slate-950 border border-cyan-400 shadow-lg shadow-cyan-500/25";
+        btnCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10";
 
-        pathCard.className = "p-5 rounded-2xl bg-white/[0.03] border border-emerald-500/40 space-y-2 text-center md:text-left transition-all duration-500";
-        pathTitle.innerText = "Worker 原生出口";
-        pathDesc.innerText = "直连放行 (104.28.x.x)";
-        pathStatus.innerText = "● 原生极速管道";
-        pathStatus.className = "pt-2 text-[11px] text-emerald-400";
-        destTitle.innerText = "Google / YouTube";
+        stepBox.className = "p-4 rounded-2xl bg-white/[0.02] border border-emerald-500/40 text-center transition-all";
+        stepLabel.innerText = "03 · 直连出口";
+        stepLabel.className = "text-[9px] text-emerald-400 uppercase font-bold";
+        stepTitle.innerText = "Worker 原生出口";
+        stepIp.innerText = "104.28.x.x (极速放行)";
+        stepDest.innerText = "Google / YouTube";
 
-        narrative.innerHTML = `
-          <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span>原生出口直连模式：极速高吞吐</span>
+        explainer.innerHTML = `
+          <div class="text-emerald-400 font-bold flex items-center space-x-1.5">
+            <span>● 原生出口直连机制：</span>
           </div>
-          <p>目标网站不属于 Cloudflare，Worker 允许直接发起对外 TCP 连接。数据通过 Cloudflare 原生骨干网直达 Google，速度最快、延迟最低，无需中继代理参与。</p>
+          <p class="text-slate-400">目标网站不属于 Cloudflare 托管，Worker 允许直接发起出站 TCP 连接，走 Cloudflare 原生骨干网直飞目标，延迟最低、带宽跑满。</p>
         `;
       } else {
-        btnCf.className = "btn-spring px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 border border-amber-400 shadow-lg shadow-amber-500/20 flex items-center space-x-2";
-        btnNonCf.className = "btn-spring px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 flex items-center space-x-2";
+        btnCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-cyan-500 text-slate-950 border border-cyan-400 shadow-lg shadow-cyan-500/25";
+        btnNonCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10";
 
-        pathCard.className = "p-5 rounded-2xl bg-amber-500/10 border border-amber-500/50 space-y-2 text-center md:text-left transition-all duration-500";
-        pathTitle.innerText = "ProxyIP 智能中继";
-        pathDesc.innerText = "第三方反代出口 (103.152.x.x)";
-        pathStatus.innerText = "● 消灭 Error 1000 回环";
-        pathStatus.className = "pt-2 text-[11px] text-amber-300";
-        destTitle.innerText = "ChatGPT / Discord";
+        stepBox.className = "p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/50 text-center transition-all";
+        stepLabel.innerText = "03 · 反代旁路";
+        stepLabel.className = "text-[9px] text-indigo-300 uppercase font-bold";
+        stepTitle.innerText = "ProxyIP 智能中继";
+        stepIp.innerText = "103.152.x.x (切除回环)";
+        stepDest.innerText = "ChatGPT / Discord";
 
-        narrative.innerHTML = `
-          <div class="flex items-center space-x-2 text-amber-400 font-bold text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            <span>ProxyIP 反代旁路：解决 1000 报错与风控拦截</span>
+        explainer.innerHTML = `
+          <div class="text-indigo-300 font-bold flex items-center space-x-1.5">
+            <span>● ProxyIP 反代旁路中继机制：</span>
           </div>
-          <p>目标网站属于 Cloudflare 托管。为避免触发内部防死循环机制，Worker 将流量无缝移交给纯数字 ProxyIP 中继小哥，以普通外部访客身份进入目标，彻底告别 Error 1000！</p>
+          <p class="text-slate-400">目标网站属于 Cloudflare 托管。为避免触发内部死循环自卫机制，Worker 将流量移交给纯数字 ProxyIP 中继小哥，以普通外部访客身份进入目标，彻底告别 Error 1000 回环！</p>
         `;
       }
     }
 
-    // 3. 全球机房雷达分析
-    function selectColoNode(colo) {
-      const btnSjc = document.getElementById('colo-btn-sjc');
-      const btnHkg = document.getElementById('colo-btn-hkg');
-      const btnNrt = document.getElementById('colo-btn-nrt');
-      const box = document.getElementById('colo-analysis-box');
+    // 3. 骨干智选卡片交互
+    function selectColoCard(colo) {
+      const sjc = document.getElementById('card-sjc');
+      const hkg = document.getElementById('card-hkg');
+      const nrt = document.getElementById('card-nrt');
 
-      btnSjc.className = "w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 text-left flex items-center justify-between hover:bg-white/[0.06] transition-all";
-      btnHkg.className = "w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 text-left flex items-center justify-between hover:bg-white/[0.06] transition-all";
-      btnNrt.className = "w-full p-3 rounded-xl bg-white/[0.03] border border-white/10 text-left flex items-center justify-between hover:bg-white/[0.06] transition-all";
+      sjc.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4";
+      hkg.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4";
+      nrt.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4";
 
       if (colo === 'sjc') {
-        btnSjc.className = "w-full p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-left flex items-center justify-between transition-all";
-        box.innerHTML = `
-          <div class="text-amber-400 font-bold flex items-center space-x-1.5">
-            <span>● 圣何塞路由特征：</span>
-          </div>
-          <p class="text-slate-400">中美海底直连光缆（NCP/TPE）量大管饱，单直线直飞加州，晚高峰抗压性能极其强悍，且完美支持 OpenAI 全功能！</p>
-        `;
+        sjc.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-cyan-500/40 bg-cyan-500/[0.03]";
       } else if (colo === 'hkg') {
-        btnHkg.className = "w-full p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-left flex items-center justify-between transition-all";
-        box.innerHTML = `
-          <div class="text-amber-400 font-bold flex items-center space-x-1.5">
-            <span>● 香港节点绕美现象剖析：</span>
-          </div>
-          <p class="text-slate-400">移动 CMI 国际通道曾因大宗免费流量拥堵而关闭了直连，流量被发配先跨太平洋到美西（150ms），再回传香港（50ms），所以呈现出 208ms 奇葩延迟。</p>
-        `;
+        hkg.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-amber-500/40 bg-amber-500/[0.03]";
       } else {
-        btnNrt.className = "w-full p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-left flex items-center justify-between transition-all";
-        box.innerHTML = `
-          <div class="text-rose-400 font-bold flex items-center space-x-1.5">
-            <span>● 东京节点大回环现象：</span>
-          </div>
-          <p class="text-slate-400">国内普通 163 骨干网缺乏与日本 Cloudflare 的廉价对等互联，普通流量被跨洋引流到美国再折返，延迟飙至 340ms+，在测速中会被自动淘汰。</p>
-        `;
+        nrt.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-rose-500/40 bg-rose-500/[0.03]";
       }
     }
 
     // 4. 终端选项卡与复制
-    let activeConsoleTab = 'mac';
-    function setConsoleTab(tab) {
-      activeConsoleTab = tab;
-      const btnMac = document.getElementById('console-tab-mac');
-      const btnAndroid = document.getElementById('console-tab-android');
-      const codeMac = document.getElementById('console-snippet-mac');
-      const codeAndroid = document.getElementById('console-snippet-android');
+    let activeTerm = 'mac';
+    function setTerminalTab(tab) {
+      activeTerm = tab;
+      const btnMac = document.getElementById('term-tab-mac');
+      const btnAndroid = document.getElementById('term-tab-android');
+      const codeMac = document.getElementById('term-code-mac');
+      const codeAndroid = document.getElementById('term-code-android');
 
       if (tab === 'mac') {
-        btnMac.className = "px-3.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition-all";
-        btnAndroid.className = "px-3.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all";
+        btnMac.className = "px-4 py-1 rounded-full bg-cyan-500 text-slate-950 font-bold transition-all";
+        btnAndroid.className = "px-4 py-1 rounded-full text-slate-400 hover:text-white transition-all";
         codeMac.classList.remove('hidden');
         codeAndroid.classList.add('hidden');
       } else {
-        btnAndroid.className = "px-3.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold transition-all";
-        btnMac.className = "px-3.5 py-1 rounded-lg text-slate-400 hover:text-white transition-all";
+        btnAndroid.className = "px-4 py-1 rounded-full bg-cyan-500 text-slate-950 font-bold transition-all";
+        btnMac.className = "px-4 py-1 rounded-full text-slate-400 hover:text-white transition-all";
         codeAndroid.classList.remove('hidden');
         codeMac.classList.add('hidden');
       }
     }
 
-    function copyConsoleSnippet() {
-      const code = activeConsoleTab === 'mac'
+    function copyTerminalCode() {
+      const code = activeTerm === 'mac'
         ? `git clone https://github.com/Fengyi-cy/CF-Pulse.git\ncd CF-Pulse\nchmod +x "CF优选测速.app/Contents/MacOS/CF优选测速"\nchmod +x "CF优选测速.app/Contents/Resources/CloudflareSpeedTest/cfst"\nxattr -cr "CF优选测速.app"`
         : `pkg update -y && pkg install git -y\ngit clone https://github.com/Fengyi-cy/CF-Pulse.git\ncd CF-Pulse && bash install_android.sh`;
 
       navigator.clipboard.writeText(code).then(() => {
-        const label = document.getElementById('console-copy-label');
-        label.innerText = '已复制到剪贴板！';
+        const label = document.getElementById('term-copy-text');
+        label.innerText = '已复制！';
         setTimeout(() => {
           label.innerText = '复制代码';
         }, 2000);
