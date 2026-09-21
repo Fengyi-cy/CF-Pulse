@@ -7,3 +7,4 @@ sampled_ip.txt
 .vscode/
 .idea/
 
+.wrangler/

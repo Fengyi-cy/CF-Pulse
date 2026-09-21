@@ -1824,10 +1824,21 @@
 
     // 探针 ①：Cloudflare Trace 接口 (触发 ProxyIP 出站)
     async function probeCloudflareTrace() {
-      // 优先从客户端直连以经过浏览器/系统代理
+      // 优先直接调用后端高并发探针 (自动识别 Clash/v2ray 系统代理，0.2s 极速响应)
+      try {
+        const res2 = await fetch('/api/inspect/cf_trace');
+        if (res2.ok) {
+          const d = await res2.json();
+          if (d && d.ip) return d;
+        }
+      } catch (e) {
+        console.log("Backend trace probe failed, trying direct...", e);
+      }
+
+      // 客户端直连兜底
       try {
         const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 3500);
+        const tid = setTimeout(() => controller.abort(), 2500);
         const res = await fetch(`https://www.cloudflare.com/cdn-cgi/trace?_t=${Date.now()}`, {
           signal: controller.signal
         });
@@ -1841,33 +1852,34 @@
           });
           if (parsed.ip) return parsed;
         }
-      } catch (e) {
-        console.log("Client trace failed, trying backend fallback...", e);
-      }
+      } catch (e) {}
 
-      // 后端兜底回退
-      const res2 = await fetch('/api/inspect/cf_trace');
-      return await res2.json();
+      return {};
     }
 
     // 探针 ②：非 Cloudflare 目标接口 (触发 Worker 原生出站)
     async function probeNonCloudflare() {
-      // 客户端直连尝试
+      // 优先直接调用后端多源并发竞速探针
       try {
-        const controller = new AbortController();
-        const tid = setTimeout(() => controller.abort(), 3500);
-        const res = await fetch('https://ipinfo.io/json', { signal: controller.signal });
-        clearTimeout(tid);
-        if (res.ok) {
-          return await res.json();
+        const res2 = await fetch('/api/inspect/non_cf');
+        if (res2.ok) {
+          const d = await res2.json();
+          if (d && d.ip) return d;
         }
       } catch (e) {
-        console.log("Client non-cf failed, trying backend fallback...", e);
+        console.log("Backend non-cf probe failed, trying direct...", e);
       }
 
-      // 后端兜底回退
-      const res2 = await fetch('/api/inspect/non_cf');
-      return await res2.json();
+      // 客户端直连兜底
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch('https://ipinfo.io/json', { signal: controller.signal });
+        clearTimeout(tid);
+        if (res.ok) return await res.json();
+      } catch (e) {}
+
+      return {};
     }
 
     async function fetchIpIntel(ip) {
@@ -2011,7 +2023,7 @@
         { id: 'gemini', url: 'https://gemini.google.com/favicon.ico', mode: 'no-cors' },
         { id: 'youtube', url: 'https://www.youtube.com/generate_204', mode: 'no-cors' },
         { id: 'github', url: 'https://github.com/favicon.ico', mode: 'no-cors' },
-        { id: 'cloudflare', url: 'https://www.cloudflare.com/cdn-cgi/trace', mode: 'cors' }
+        { id: 'cloudflare', url: 'https://www.cloudflare.com/favicon.ico', mode: 'no-cors' }
       ];
 
       await Promise.allSettled(tests.map(async (t) => {

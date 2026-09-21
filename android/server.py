@@ -20,6 +20,7 @@ import threading
 import tempfile
 import urllib.request
 import concurrent.futures
+import re
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -646,6 +647,100 @@ class ProxyIPTaskManager:
 
 proxy_task_manager = ProxyIPTaskManager()
 
+def get_system_proxy_url():
+    """自动嗅探系统代理或本地代理端口 (Clash/v2ray)，确保体检探针秒级直达"""
+    env_p = os.environ.get("http_proxy") or os.environ.get("HTTP_PROXY") or os.environ.get("all_proxy") or os.environ.get("ALL_PROXY")
+    if env_p:
+        return env_p
+    try:
+        out = subprocess.check_output(['scutil', '--proxy'], text=True, timeout=1.2)
+        http_en = re.search(r'HTTPEnable\s*:\s*1', out)
+        http_host = re.search(r'HTTPProxy\s*:\s*(\S+)', out)
+        http_port = re.search(r'HTTPPort\s*:\s*(\d+)', out)
+        if http_en and http_host and http_port:
+            return f"http://{http_host.group(1)}:{http_port.group(1)}"
+        socks_en = re.search(r'SOCKSEnable\s*:\s*1', out)
+        socks_host = re.search(r'SOCKSProxy\s*:\s*(\S+)', out)
+        socks_port = re.search(r'SOCKSPort\s*:\s*(\d+)', out)
+        if socks_en and socks_host and socks_port:
+            return f"socks5://{socks_host.group(1)}:{socks_port.group(1)}"
+    except Exception:
+        pass
+    for port in [10808, 7890, 7897, 8001]:
+        try:
+            s = socket.create_connection(("127.0.0.1", port), timeout=0.1)
+            s.close()
+            return f"http://127.0.0.1:{port}"
+        except Exception:
+            continue
+    return None
+
+def fetch_non_cf_info():
+    """多源并发竞速探测 Worker 原生出站 IP，自动走代理，0.2s 极速捕获"""
+    proxy_url = get_system_proxy_url()
+    proxy_args = ["-x", proxy_url] if proxy_url else []
+    endpoints = [
+        "http://ip-api.com/json",
+        "https://api.ipify.org?format=json",
+        "https://ipinfo.io/json",
+        "https://api.myip.com"
+    ]
+    def probe_one(u):
+        cmd = ["curl", "-s", "-m", "5"] + proxy_args + [u]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0 and res.stdout.strip().startswith("{"):
+            try:
+                d = json.loads(res.stdout)
+                if "query" in d and "ip" not in d:
+                    d["ip"] = d["query"]
+                return d
+            except Exception:
+                pass
+        return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+        futures = [ex.submit(probe_one, ep) for ep in endpoints]
+        for f in concurrent.futures.as_completed(futures):
+            try:
+                res = f.result()
+                if res and res.get("ip"):
+                    return res
+            except Exception:
+                pass
+    return {"error": "Failed to fetch non-cf ip"}
+
+def fetch_cf_trace_info():
+    """多源并发竞速探测 Cloudflare ProxyIP 出站信息，自动走代理，0.2s 极速捕获"""
+    proxy_url = get_system_proxy_url()
+    proxy_args = ["-x", proxy_url] if proxy_url else []
+    endpoints = [
+        "https://www.cloudflare.com/cdn-cgi/trace",
+        "https://1.1.1.1/cdn-cgi/trace",
+        "https://cloudflare-dns.com/cdn-cgi/trace"
+    ]
+    def probe_one(u):
+        cmd = ["curl", "-s", "-m", "5"] + proxy_args + [u]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0 and "ip=" in res.stdout:
+            lines = {}
+            for line in res.stdout.splitlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    lines[k.strip()] = v.strip()
+            return lines
+        return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+        futures = [ex.submit(probe_one, ep) for ep in endpoints]
+        for f in concurrent.futures.as_completed(futures):
+            try:
+                res = f.result()
+                if res and res.get("ip"):
+                    return res
+            except Exception:
+                pass
+    return {"error": "Failed to fetch cf_trace"}
+
 def get_ip_intel(ip_str):
     if not ip_str:
         return {"error": "Missing IP"}
@@ -756,27 +851,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             q_ip = parse_qs(url.query).get('ip', [None])[0]
             self._send_json(get_ip_intel(q_ip))
         elif path == "/api/inspect/non_cf":
-            # 辅助请求非 CF 接口
-            try:
-                res = subprocess.run(["curl", "-s", "-m", "3", "https://ipinfo.io/json"], capture_output=True, text=True)
-                if res.returncode == 0 and res.stdout.strip().startswith("{"):
-                    self._send_json(json.loads(res.stdout))
-                else:
-                    self._send_json({"error": "Failed to fetch non-cf ip"})
-            except Exception as e:
-                self._send_json({"error": str(e)})
+            self._send_json(fetch_non_cf_info())
         elif path == "/api/inspect/cf_trace":
-            # 辅助请求 CF 接口
-            try:
-                res = subprocess.run(["curl", "-s", "-m", "3", "https://www.cloudflare.com/cdn-cgi/trace"], capture_output=True, text=True)
-                lines = {}
-                for line in res.stdout.splitlines():
-                    if "=" in line:
-                        k, v = line.split("=", 1)
-                        lines[k.strip()] = v.strip()
-                self._send_json(lines)
-            except Exception as e:
-                self._send_json({"error": str(e)})
+            self._send_json(fetch_cf_trace_info())
         elif path == "/manifest.json":
             self._serve_manifest()
         elif path == "/icon.svg":
