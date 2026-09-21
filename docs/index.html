@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CF-Pulse — 专为 CF 节点打造的下一代极速测速与线路体检控制台</title>
-  <meta name="description" content="让你的 Cloudflare 节点跑满带宽、彻底告别卡顿与 Error 1000 报错。多线程秒级探测 Anycast CDN 延迟、智能筛选高可用 ProxyIP 出口，一键深度体检双出站链路质量。">
+  <title>CF-Pulse — 专为 CF 节点打造的极速提速、防报错与链路体检神器</title>
+  <meta name="description" content="专为 Cloudflare 节点调优打造。多线程秒级优选低延迟 Anycast 入口，智能筛选高可用 ProxyIP 出口消灭 Error 1000，一键深度体检双出站质量与 AI 服务解锁能力。macOS & Android 双端原生专属支持。">
   
-  <!-- 字体预加载 (Inter + JetBrains Mono) -->
+  <!-- 字体预加载 (Plus Jakarta Sans + JetBrains Mono) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,16 +18,16 @@
       theme: {
         extend: {
           colors: {
-            // 年轻、通透、高质感的电光蓝与冷霓虹色谱（彻底告别沉闷的土黄）
             neon: {
               cyan: '#00F0FF',
               blue: '#3B82F6',
               indigo: '#6366F1',
               violet: '#8B5CF6',
-              emerald: '#10B981'
+              emerald: '#10B981',
+              amber: '#F59E0B'
             },
             space: {
-              black: '#040711',
+              black: '#03060E',
               card: '#080E1E',
               subtle: '#0E172D',
               border: 'rgba(255, 255, 255, 0.08)',
@@ -44,7 +44,7 @@
   </script>
 
   <style>
-    /* 深空冷光与未来感微精噪点网格 */
+    /* 深空冷光背景与动态微光晕 */
     body {
       background-color: #03060E;
       background-image: 
@@ -92,7 +92,7 @@
       transform: translateY(0) scale(0.98);
     }
 
-    /* 线性流动光效 */
+    /* 线性流动激光字效 */
     @keyframes laser-flow {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
@@ -106,7 +106,7 @@
       animation: laser-flow 6s ease infinite;
     }
 
-    /* 弹簧触觉反馈 */
+    /* 触觉弹簧微反馈 */
     .spring-press {
       transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -117,12 +117,12 @@
 </head>
 <body class="text-slate-200 antialiased selection:bg-cyan-500 selection:text-black relative min-h-screen flex flex-col font-sans">
 
-  <!-- 顶部悬浮胶囊导航 (Floating Capsule Nav - 极简轻盈) -->
+  <!-- 顶部悬浮胶囊导航 (Floating Capsule Nav) -->
   <div class="fixed top-5 inset-x-0 z-50 flex justify-center px-4 pointer-events-none">
-    <header class="pointer-events-auto flex items-center justify-between px-5 py-2.5 rounded-full bg-[#080E20]/75 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/60 max-w-3xl w-full">
+    <header class="pointer-events-auto flex items-center justify-between px-5 py-2.5 rounded-full bg-[#080E20]/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/70 max-w-3xl w-full">
       <!-- 品牌标识 -->
       <a href="#" class="flex items-center space-x-2.5 group">
-        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-500 flex items-center justify-center font-extrabold text-xs text-black shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+        <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-500 flex items-center justify-center font-black text-xs text-black shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform">
           ⚡
         </div>
         <div class="flex items-center space-x-2">
@@ -131,15 +131,15 @@
         </div>
       </a>
 
-      <!-- 锚点菜单 (极简细字) -->
+      <!-- 核心功能与使用导航 -->
       <nav class="hidden sm:flex items-center space-x-6 text-xs font-medium text-slate-300">
-        <a href="#workbench" class="hover:text-cyan-300 transition-colors">测速工作台</a>
-        <a href="#topology" class="hover:text-cyan-300 transition-colors">双通道分流</a>
-        <a href="#intelligence" class="hover:text-cyan-300 transition-colors">骨干智选</a>
-        <a href="#terminal" class="hover:text-cyan-300 transition-colors">极速部署</a>
+        <a href="#features" class="hover:text-cyan-300 transition-colors">核心功能</a>
+        <a href="#workbench" class="hover:text-cyan-300 transition-colors">测速内核</a>
+        <a href="#platforms" class="hover:text-cyan-300 transition-colors">双端专属</a>
+        <a href="#deploy" class="hover:text-cyan-300 transition-colors">极速安装</a>
       </nav>
 
-      <!-- 右侧 GitHub 胶囊按钮 -->
+      <!-- 右侧 GitHub 链接 -->
       <div class="flex items-center space-x-2">
         <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" rel="noopener noreferrer" class="spring-press flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/15">
           <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -149,106 +149,250 @@
     </header>
   </div>
 
-  <!-- 首屏视觉区 (Hero Section - 纯净空间感与流光字体) -->
-  <section class="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
+  <!-- 首屏视觉区 (Hero Section - 直击作用与核心定位) -->
+  <section class="relative pt-32 pb-16 md:pt-40 md:pb-24 overflow-hidden">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-8">
       
-      <!-- 极客发光微标签 -->
+      <!-- 功能微标签 -->
       <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-cyan-400/30 text-xs font-mono text-cyan-300 backdrop-blur-md shadow-lg shadow-cyan-500/10">
         <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-        <span>NEXT-GEN ANYCAST &amp; DUAL-ROUTE CONTROLLER</span>
+        <span>CLOUDFLARE NODE ACCELERATOR &amp; HEALTH CHECKER</span>
       </div>
 
-      <!-- 冲击力主标题 (激光质感渐变) -->
-      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.08] max-w-4xl mx-auto">
-        让你的 CF 节点跑满网速<br>
-        <span class="laser-text">彻底告别卡顿与 Error 1000 回环</span>
+      <!-- 冲击力主标题：直截了当点明作用 -->
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.1] max-w-4xl mx-auto">
+        专为 CF 节点打造的<br>
+        <span class="laser-text">极速提速、防报错与链路体检神器</span>
       </h1>
 
-      <!-- 精炼副标题 -->
+      <!-- 核心作用简述：不讲原理，只讲能解决什么痛点 -->
       <p class="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-        秒级扫描 Anycast 延迟，挑选高可用 ProxyIP 出口，一键深度体检双出站链路质量。
+        如果你在使用基于 Cloudflare 的代理节点（VLESS-Worker / Pages / EdgeTunnel），遇到过<b>看视频转圈卡顿</b>、<b>访问网站报 Error 1000</b> 或 <b>IP 频繁跳动</b>，CF-Pulse 能够帮你一键解决。
       </p>
 
       <!-- 双核心行动按键 -->
       <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-        <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" class="btn-electric spring-press px-8 py-3.5 rounded-full text-slate-950 font-extrabold text-sm flex items-center space-x-2">
-          <span>进入 GitHub 仓库</span>
+        <a href="#deploy" class="btn-electric spring-press px-8 py-3.5 rounded-full text-slate-950 font-extrabold text-sm flex items-center space-x-2">
+          <span>⚡ 立即部署使用</span>
           <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </a>
-        <a href="#workbench" class="spring-press px-7 py-3.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-white font-semibold text-sm border border-white/10 flex items-center space-x-2 backdrop-blur-md">
-          <span>⚡ 打开测速工作台</span>
+        <a href="#features" class="spring-press px-7 py-3.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-white font-semibold text-sm border border-white/10 flex items-center space-x-2 backdrop-blur-md">
+          <span>查看核心功能列表</span>
         </a>
       </div>
 
-      <!-- 核心视觉组件：纯代码打造的原生控制台悬浮 UI (拒绝大张贴图，纯代码纯组件) -->
-      <div class="mt-14 max-w-4xl mx-auto rounded-2xl glow-card p-4 sm:p-6 text-left space-y-6 relative group">
-        <!-- 窗口微顶栏 -->
-        <div class="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
-            <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
-            <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
-            <span class="text-xs font-mono text-slate-400 ml-2">CF-Pulse v1.0 — Telemetry Master Control</span>
+      <!-- 核心作用速览矩阵 (3个直观功能点) -->
+      <div class="pt-6 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 text-left font-mono">
+        <div class="p-5 rounded-2xl bg-[#080E1E]/80 border border-white/10 space-y-2 glow-card">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-cyan-400 font-bold">01 · 入口极速提速</span>
+            <span class="text-base">⚡</span>
           </div>
-          <div class="flex items-center space-x-2 text-[11px] font-mono text-cyan-300">
-            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-            <span>SYSTEM LINKED · 0 丢包</span>
-          </div>
+          <div class="text-base font-extrabold text-white">Anycast 边缘优选</div>
+          <p class="text-xs text-slate-400 font-sans leading-relaxed">
+            多线程实测当前宽带到 CF 节点的真实延迟与带宽，测出最快入口，告别视频卡顿。
+          </p>
         </div>
 
-        <!-- 三分式核心遥测矩阵 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-          <!-- 模块 1 -->
-          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
-            <div class="text-[10px] text-slate-400 uppercase">CDN Anycast 入口</div>
-            <div class="text-xl font-bold text-white tracking-tight flex items-center justify-between">
-              <span>28.4 <span class="text-xs font-normal text-slate-400">ms</span></span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">极速直连</span>
-            </div>
-            <div class="text-[11px] text-slate-400">104.16.89.24 · 圣何塞 SJC</div>
+        <div class="p-5 rounded-2xl bg-[#080E1E]/80 border border-white/10 space-y-2 glow-card">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-indigo-400 font-bold">02 · 出口彻底防报错</span>
+            <span class="text-base">🛡️</span>
           </div>
+          <div class="text-base font-extrabold text-white">ProxyIP 智能筛选</div>
+          <p class="text-xs text-slate-400 font-sans leading-relaxed">
+            秒级探活云端高可用反代出口，切除回环死循环，彻底消灭访问网站时的 Error 1000 报错。
+          </p>
+        </div>
 
-          <!-- 模块 2 -->
-          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
-            <div class="text-[10px] text-slate-400 uppercase">ProxyIP 反代旁路</div>
-            <div class="text-xl font-bold text-cyan-400 tracking-tight flex items-center justify-between">
-              <span>100% <span class="text-xs font-normal text-slate-400">隔离</span></span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold">切除回环</span>
-            </div>
-            <div class="text-[11px] text-slate-400">消灭 Error 1000 / 522 报错</div>
+        <div class="p-5 rounded-2xl bg-[#080E1E]/80 border border-white/10 space-y-2 glow-card">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-emerald-400 font-bold">03 · 节点全能体检</span>
+            <span class="text-base">🔍</span>
           </div>
-
-          <!-- 模块 3 -->
-          <div class="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-1.5">
-            <div class="text-[10px] text-slate-400 uppercase">顶级 AI 解锁矩阵</div>
-            <div class="text-xl font-bold text-indigo-400 tracking-tight flex items-center justify-between">
-              <span>满血 <span class="text-xs font-normal text-slate-400">通过</span></span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold">0 欺诈风险</span>
-            </div>
-            <div class="text-[11px] text-slate-400">ChatGPT · Gemini · Claude</div>
-          </div>
+          <div class="text-base font-extrabold text-white">双出站与 AI 解锁</div>
+          <p class="text-xs text-slate-400 font-sans leading-relaxed">
+            单次捕获双出站真实路径，检测 IP 欺诈度与风控分，一网打尽 Google 与 ChatGPT 状态。
+          </p>
         </div>
       </div>
 
     </div>
   </section>
 
-  <!-- 交互微应用 1：测速工作台 (Interactive Speed & Jitter Workbench) -->
-  <section id="workbench" class="py-20 bg-[#040814] border-t border-white/[0.06] relative">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
+  <!-- 核心功能板块 (Core Features - 详细介绍功能与作用) -->
+  <section id="features" class="py-20 bg-[#040814] border-t border-white/[0.06] relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-16">
       
       <div class="text-center space-y-3 max-w-xl mx-auto">
-        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Live Sandbox Benchmark</div>
+        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Powerful Core Capabilities</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          极速网络脉冲工作台
+          四大核心功能，专治节点顽疾
         </h2>
         <p class="text-sm text-slate-300 leading-relaxed">
-          点击启动压测，实时体验多线程并发探测 Anycast 握手、抖动与带宽吞吐能力。
+          聚焦提速、稳定与排障三大诉求，提供完整实用的调优能力。
         </p>
       </div>
 
-      <!-- 现代化深空磨砂工作台卡片 -->
+      <!-- 功能详情栅格 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- 功能 1：CDN 边缘优选 -->
+        <div class="p-8 rounded-3xl glow-card space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-300 text-2xl font-bold">
+              ⚡
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-bold">提速核心</span>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-2xl font-extrabold text-white tracking-tight">
+              CDN 边缘节点优选：测出最快入口
+            </h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              针对不同宽带（电信/联通/移动）路由差异，自动在数万个 Cloudflare 候选 IP 中并发测速，测出你当前网络下跑得最快、延迟最低的入口 IP。
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-2 border-t border-white/5 font-mono text-xs text-slate-300">
+            <div class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">✔</span>
+              <span><b>多线程并发测速</b>：同时探测真实 TCP 延迟、丢包率与 HTTP 实际下载吞吐量；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">✔</span>
+              <span><b>自由灵活配置</b>：支持自定义测速线程数、下载大小、延迟上限与带宽门槛；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">✔</span>
+              <span><b>一键保存导出</b>：测速结果实时生成并自动保存，移动端一键导出至系统专属目录。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 功能 2：ProxyIP 智能优选 -->
+        <div class="p-8 rounded-3xl glow-card space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-300 text-2xl font-bold">
+              🛡️
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-bold">防报错核心</span>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-2xl font-extrabold text-white tracking-tight">
+              ProxyIP 智能筛选：告别 Error 1000
+            </h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              针对访问 Cloudflare 托管网站（ChatGPT、Discord、Notion 等）容易触发的 DNS 回环报错，自动探测筛选优质反代出口，保障访问畅通无阻。
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-2 border-t border-white/5 font-mono text-xs text-slate-300">
+            <div class="flex items-start space-x-2.5">
+              <span class="text-indigo-400 font-bold">✔</span>
+              <span><b>云端活跃池实时同步</b>：自动拉取持续维护的活跃 ProxyIP 候选池；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-indigo-400 font-bold">✔</span>
+              <span><b>原生并发 TLS 探针</b>：秒级测试握手延迟、丢包率，剔除失效与高延迟反代；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-indigo-400 font-bold">✔</span>
+              <span><b>机房与区域精准反解</b>：实时向官方 Trace 反解落地机房代码（Colo）与归属国家。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 功能 3：节点双出站与全能体检 -->
+        <div class="p-8 rounded-3xl glow-card space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-300 text-2xl font-bold">
+              🔍
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">深度诊断</span>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-2xl font-extrabold text-white tracking-tight">
+              全链路深度体检：诊断出口与解锁
+            </h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              单次测试即可同时探测节点访问不同网站的【原生出口】与【反代出口】双出站路径，精准排查分流配置是否正确，全面评估 IP 风控水平。
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-2 border-t border-white/5 font-mono text-xs text-slate-300">
+            <div class="flex items-start space-x-2.5">
+              <span class="text-emerald-400 font-bold">✔</span>
+              <span><b>双通道出口并发捕获</b>：清晰展现节点当前两个出口的真实 IP、机房与地理位置；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-emerald-400 font-bold">✔</span>
+              <span><b>IP 纯净度与欺诈评分</b>：评估 0-100 欺诈值，辨别是机房还是住宅，标记风险标签；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-emerald-400 font-bold">✔</span>
+              <span><b>关键 AI 与流媒体解锁</b>：并发测试 Google、ChatGPT、Claude、Gemini 连通状态。</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 功能 4：轻量低耗与纯净无残留 -->
+        <div class="p-8 rounded-3xl glow-card space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-300 text-2xl font-bold">
+              🍃
+            </div>
+            <span class="text-xs font-mono px-3 py-1 rounded-full bg-white/10 text-slate-300 border border-white/10 font-bold">零残留架构</span>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-2xl font-extrabold text-white tracking-tight">
+              纯净轻量：零依赖、无垃圾、随时卸载
+            </h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              无需安装厚重的环境与依赖，全套流程自包含打包，运行完全在本地内存流转，绝不在系统各处乱写隐蔽文件，退出即净。
+            </p>
+          </div>
+
+          <div class="space-y-3 pt-2 border-t border-white/5 font-mono text-xs text-slate-300">
+            <div class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">✔</span>
+              <span><b>绝对零隐私搜集</b>：所有测速与探测指令均在本地运行，不上传任何节点信息；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">✔</span>
+              <span><b>自包含运行包</b>：macOS 拖入废纸篓即删；安卓 Termux 一行命令彻底清除干净；</span>
+            </div>
+            <div class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">✔</span>
+              <span><b>轻量低占用</b>：探针服务常驻内存低于 25MB，测试完成后自动休眠。</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 测速内核体验区 (Interactive Speedtest Benchmark) -->
+  <section id="workbench" class="py-20 relative">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
+      
+      <div class="text-center space-y-3 max-w-xl mx-auto">
+        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Engine Performance Test</div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          极速测速内核实时体验
+        </h2>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          基于 XIU2 高性能测速引擎，支持高并发多线程对 CF 骨干机房进行秒级压力测速。
+        </p>
+      </div>
+
+      <!-- 深空磨砂工作台卡片 -->
       <div class="max-w-3xl mx-auto rounded-3xl glow-card p-6 sm:p-10 space-y-8 relative overflow-hidden">
         
         <!-- 实时速度计与脉冲水波 -->
@@ -281,7 +425,7 @@
           <!-- 交互触发按钮 -->
           <button type="button" onclick="runWorkbenchSpeedtest()" id="wb-trigger-btn" class="btn-electric spring-press px-8 py-3 rounded-full text-slate-950 font-black text-xs flex items-center space-x-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span id="wb-btn-text">⚡ 开始并发极限压力测试</span>
+            <span id="wb-btn-text">⚡ 开始模拟高并发压力测试</span>
           </button>
         </div>
 
@@ -317,65 +461,78 @@
     </div>
   </section>
 
-  <!-- 交互微应用 2：双通道分流动态拓扑 (Dual-Route Visual Inspector) -->
-  <section id="topology" class="py-20 relative">
+  <!-- 双端原生专属支持 (Platform Focus: macOS & Android) -->
+  <section id="platforms" class="py-20 bg-[#040814] border-t border-white/[0.06] relative">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
       
       <div class="text-center space-y-3 max-w-xl mx-auto">
-        <div class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Topology Routing Simulator</div>
+        <div class="text-xs font-mono font-bold text-indigo-400 uppercase tracking-wider">Tailored for Mac &amp; Mobile</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          双通道分流动态拓扑
+          Mac 电脑与安卓手机双端专属优化
         </h2>
         <p class="text-sm text-slate-300 leading-relaxed">
-          点击切换目标网站，看网络数据包如何精准分流，彻底抹平 Error 1000 报错。
+          绝非生硬套壳，针对两端系统特性分别进行深度架构定制与体验调优。
         </p>
       </div>
 
-      <div class="max-w-4xl mx-auto rounded-3xl glow-card p-6 sm:p-10 space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        <!-- 切换胶囊控制器 -->
-        <div class="flex flex-wrap items-center justify-center gap-3">
-          <button type="button" onclick="setSimMode('non-cf')" id="sim-tab-noncf" class="spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-cyan-500 text-slate-950 border border-cyan-400 shadow-lg shadow-cyan-500/25">
-            🎯 目标 A：非 CF 网站 (Google / YouTube)
-          </button>
-          <button type="button" onclick="setSimMode('cf')" id="sim-tab-cf" class="spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10">
-            🛡️ 目标 B：CF 保护网站 (ChatGPT / Discord)
-          </button>
+        <!-- macOS 专属卡片 -->
+        <div class="p-8 rounded-3xl glow-card space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-3xl">🍏</span>
+              <div>
+                <h3 class="text-xl font-extrabold text-white">macOS 原生桌面自包含 App</h3>
+                <div class="text-xs font-mono text-cyan-300">Darwin 架构 · 开箱即用</div>
+              </div>
+            </div>
+            <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-white/10 text-white border border-white/15">免装环境</span>
+          </div>
+
+          <ul class="space-y-3 text-xs sm:text-sm text-slate-300 font-mono">
+            <li class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">▸</span>
+              <span><b>双击即启</b>：双击 <code>CF优选测速.app</code>，后台静默拉起并自动打开浏览器控制台；</span>
+            </li>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">▸</span>
+              <span><b>零多余配置</b>：测速核心与 Python 探针已完全内置打包，可直接拖入应用程序文件夹；</span>
+            </li>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-cyan-400 font-bold">▸</span>
+              <span><b>极速卸载</b>：不向系统写入隐蔽配置，移入废纸篓即可彻底清理。</span>
+            </li>
+          </ul>
         </div>
 
-        <!-- 4 步流转卡片 -->
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 font-mono text-xs">
-          <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-            <span class="text-[9px] text-cyan-400 uppercase font-bold">01 · 发起</span>
-            <div class="font-bold text-white mt-1">本地客户端</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">优选 Anycast 入口</div>
+        <!-- Android 专属卡片 -->
+        <div class="p-8 rounded-3xl glow-card space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-3xl">🤖</span>
+              <div>
+                <h3 class="text-xl font-extrabold text-white">Android 移动端原生深度调优</h3>
+                <div class="text-xs font-mono text-emerald-400">Termux 深度适配 · 蜂窝网络真机测速</div>
+              </div>
+            </div>
+            <span class="text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">移动专属</span>
           </div>
 
-          <div class="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-center">
-            <span class="text-[9px] text-cyan-300 uppercase font-bold">02 · 调度</span>
-            <div class="font-bold text-white mt-1">Cloudflare Edge</div>
-            <div class="text-[11px] text-cyan-300 mt-0.5">V8 智能意图识别</div>
-          </div>
-
-          <div id="route-step-box" class="p-4 rounded-2xl bg-white/[0.02] border border-emerald-500/40 text-center transition-all">
-            <span id="route-step-label" class="text-[9px] text-emerald-400 uppercase font-bold">03 · 直连出口</span>
-            <div id="route-step-title" class="font-bold text-white mt-1">Worker 原生出口</div>
-            <div id="route-step-ip" class="text-[11px] text-slate-400 mt-0.5">104.28.x.x (极速放行)</div>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-            <span class="text-[9px] text-indigo-400 uppercase font-bold">04 · 抵达</span>
-            <div id="route-step-dest" class="font-bold text-white mt-1">Google / YouTube</div>
-            <div class="text-[11px] text-emerald-400 mt-0.5">● 满血高速加载</div>
-          </div>
-        </div>
-
-        <!-- 说明底卡 -->
-        <div id="route-explainer" class="p-5 rounded-2xl bg-[#060914] border border-white/5 text-xs text-slate-300 leading-relaxed font-mono space-y-1">
-          <div class="text-emerald-400 font-bold flex items-center space-x-1.5">
-            <span>● 原生出口直连机制：</span>
-          </div>
-          <p class="text-slate-400">目标网站不属于 Cloudflare 托管，Worker 允许直接发起出站 TCP 连接，走 Cloudflare 原生骨干网直飞目标，延迟最低、带宽跑满。</p>
+          <ul class="space-y-3 text-xs sm:text-sm text-slate-300 font-mono">
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-400 font-bold">▸</span>
+              <span><b>桌面微件一键拉起</b>：配合 Termux:Widget，桌面点一下图标后台静默测速，免触命令行；</span>
+            </li>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-400 font-bold">▸</span>
+              <span><b>PWA 独立全屏</b>：支持添加至主屏幕，享受无浏览器顶栏底栏的纯净独立 App 界面；</span>
+            </li>
+            <li class="flex items-start space-x-2.5">
+              <span class="text-emerald-400 font-bold">▸</span>
+              <span><b>手机存储自动导出</b>：测速优选结果自动同步保存至手机公共存储 <code>/sdcard/优选IP/</code>。</span>
+            </li>
+          </ul>
         </div>
 
       </div>
@@ -383,88 +540,17 @@
     </div>
   </section>
 
-  <!-- 交互微应用 3：全球 Anycast 骨干智选 (Anycast Intelligence) -->
-  <section id="intelligence" class="py-20 bg-[#040814] border-t border-white/[0.06] relative">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-12">
-      
-      <div class="text-center space-y-3 max-w-xl mx-auto">
-        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Anycast Backbone Telemetry</div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          全球 Anycast 骨干智选
-        </h2>
-        <p class="text-sm text-slate-300 leading-relaxed">
-          为什么移动与电信网络下，直连美西反而比绕美假香港更稳定？点击实测揭晓真相：
-        </p>
-      </div>
-
-      <!-- 智能节点比选面板 -->
-      <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- 节点 1：美西圣何塞 -->
-        <div onclick="selectColoCard('sjc')" id="card-sjc" class="p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-cyan-500/40 bg-cyan-500/[0.03]">
-          <div class="flex items-center justify-between">
-            <span class="text-2xl">🇺🇸</span>
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">推荐首选</span>
-          </div>
-          <div>
-            <div class="text-base font-extrabold text-white">SJC · 美国圣何塞</div>
-            <div class="text-xs text-slate-400 font-mono mt-0.5">中美海底直连光缆 (NCP/TPE)</div>
-          </div>
-          <div class="pt-2 flex items-baseline justify-between border-t border-white/5 font-mono">
-            <span class="text-xs text-slate-400">实测延迟</span>
-            <span class="text-2xl font-black text-emerald-400">136 ms</span>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">直线跨洋无绕路，带宽量大管饱，晚高峰极度稳定，完美支持 OpenAI 满血解锁！</p>
-        </div>
-
-        <!-- 节点 2：中国香港 -->
-        <div onclick="selectColoCard('hkg')" id="card-hkg" class="p-6 rounded-3xl glow-card cursor-pointer space-y-4">
-          <div class="flex items-center justify-between">
-            <span class="text-2xl">🇭🇰</span>
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">CMI 绕路</span>
-          </div>
-          <div>
-            <div class="text-base font-extrabold text-slate-200">HKG · 中国香港 (绕美)</div>
-            <div class="text-xs text-slate-400 font-mono mt-0.5">先洛杉矶后香港 (大回环)</div>
-          </div>
-          <div class="pt-2 flex items-baseline justify-between border-t border-white/5 font-mono">
-            <span class="text-xs text-slate-400">实测延迟</span>
-            <span class="text-2xl font-black text-amber-400">208 ms</span>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">看似离得近，实则跨太平洋打了个来回，极易丢包，且 OpenAI 官方不支持香港地区。</p>
-        </div>
-
-        <!-- 节点 3：日本东京 -->
-        <div onclick="selectColoCard('nrt')" id="card-nrt" class="p-6 rounded-3xl glow-card cursor-pointer space-y-4">
-          <div class="flex items-center justify-between">
-            <span class="text-2xl">🇯🇵</span>
-            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 border border-rose-500/30">无直连通道</span>
-          </div>
-          <div>
-            <div class="text-base font-extrabold text-slate-200">NRT · 日本东京</div>
-            <div class="text-xs text-slate-400 font-mono mt-0.5">普通宽带无免费直达海缆</div>
-          </div>
-          <div class="pt-2 flex items-baseline justify-between border-t border-white/5 font-mono">
-            <span class="text-xs text-slate-400">实测延迟</span>
-            <span class="text-2xl font-black text-rose-400">342 ms</span>
-          </div>
-          <p class="text-xs text-slate-400 leading-relaxed">缺乏廉价对等互联，流量被强制重定向发配，测速工具会自动将其剔除淘汰。</p>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- 交互微应用 4：双端极速终端部署 (Terminal Deploy) -->
-  <section id="terminal" class="py-20 relative">
+  <!-- 极速部署与安装控制台 (Deploy Section) -->
+  <section id="deploy" class="py-20 relative">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-8">
       
       <div class="text-center space-y-3 max-w-xl mx-auto">
-        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Zero-Friction CLI Setup</div>
+        <div class="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">Fast Installation</div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          极速安装与纯净卸载
+          极速安装与部署
         </h2>
         <p class="text-sm text-slate-300 leading-relaxed">
-          全平台原生支持，零多余依赖，不向系统注册表留存任何隐蔽文件。
+          复制以下命令，在你的 Mac 终端或安卓 Termux 中粘贴运行即可。
         </p>
       </div>
 
@@ -509,7 +595,7 @@ chmod +x "CF优选测速.app/Contents/MacOS/CF优选测速"
 chmod +x "CF优选测速.app/Contents/Resources/CloudflareSpeedTest/cfst"
 xattr -cr "CF优选测速.app"
 
-<span class="text-slate-500"># 3. 双击 CF优选测速.app 即可自动在后台启动并唤起控制台！</span></code></pre>
+<span class="text-slate-500"># 3. 双击 CF优选测速.app 即可自动在后台静默运行并唤起浏览器控制台！</span></code></pre>
 
           <pre id="term-code-android" class="text-slate-200 leading-relaxed hidden"><code><span class="text-slate-500"># 1. Termux 更新基础环境</span>
 pkg update -y &amp;&amp; pkg install git -y
@@ -524,8 +610,8 @@ cd CF-Pulse &amp;&amp; bash install_android.sh
         <!-- 纯净卸载提醒 -->
         <div class="px-6 py-3.5 bg-[#050914] border-t border-white/[0.08] flex flex-wrap items-center justify-between text-xs text-slate-400">
           <div class="flex items-center space-x-2">
-            <span class="text-cyan-400 font-bold">🗑️ 彻底卸载与清理：</span>
-            <span>Mac 直接将 App 移入废纸篓；安卓 Termux 执行一行命令一键抹平。</span>
+            <span class="text-cyan-400 font-bold">🗑️ 纯净卸载方式：</span>
+            <span>Mac 直接将 App 移入废纸篓；安卓 Termux 执行一行命令即可彻底抹平。</span>
           </div>
           <span class="font-mono text-[10px] text-slate-500">ZERO DISK RESIDUE</span>
         </div>
@@ -573,7 +659,7 @@ cd CF-Pulse &amp;&amp; bash install_android.sh
         <p>© 2026 CF-Pulse. Built for extreme network speed.</p>
         <a href="https://github.com/Fengyi-cy/CF-Pulse" target="_blank" class="text-slate-400 hover:text-white flex items-center space-x-1">
           <span>GitHub: Fengyi-cy/CF-Pulse</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 01-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
         </a>
       </div>
 
@@ -628,74 +714,7 @@ cd CF-Pulse &amp;&amp; bash install_android.sh
       }, 35);
     }
 
-    // 2. 双通道拓扑交互
-    function setSimMode(mode) {
-      const btnNonCf = document.getElementById('sim-tab-noncf');
-      const btnCf = document.getElementById('sim-tab-cf');
-      const stepBox = document.getElementById('route-step-box');
-      const stepLabel = document.getElementById('route-step-label');
-      const stepTitle = document.getElementById('route-step-title');
-      const stepIp = document.getElementById('route-step-ip');
-      const stepDest = document.getElementById('route-step-dest');
-      const explainer = document.getElementById('route-explainer');
-
-      if (mode === 'non-cf') {
-        btnNonCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-cyan-500 text-slate-950 border border-cyan-400 shadow-lg shadow-cyan-500/25";
-        btnCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10";
-
-        stepBox.className = "p-4 rounded-2xl bg-white/[0.02] border border-emerald-500/40 text-center transition-all";
-        stepLabel.innerText = "03 · 直连出口";
-        stepLabel.className = "text-[9px] text-emerald-400 uppercase font-bold";
-        stepTitle.innerText = "Worker 原生出口";
-        stepIp.innerText = "104.28.x.x (极速放行)";
-        stepDest.innerText = "Google / YouTube";
-
-        explainer.innerHTML = `
-          <div class="text-emerald-400 font-bold flex items-center space-x-1.5">
-            <span>● 原生出口直连机制：</span>
-          </div>
-          <p class="text-slate-400">目标网站不属于 Cloudflare 托管，Worker 允许直接发起出站 TCP 连接，走 Cloudflare 原生骨干网直飞目标，延迟最低、带宽跑满。</p>
-        `;
-      } else {
-        btnCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-cyan-500 text-slate-950 border border-cyan-400 shadow-lg shadow-cyan-500/25";
-        btnNonCf.className = "spring-press px-5 py-2.5 rounded-full text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10";
-
-        stepBox.className = "p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/50 text-center transition-all";
-        stepLabel.innerText = "03 · 反代旁路";
-        stepLabel.className = "text-[9px] text-indigo-300 uppercase font-bold";
-        stepTitle.innerText = "ProxyIP 智能中继";
-        stepIp.innerText = "103.152.x.x (切除回环)";
-        stepDest.innerText = "ChatGPT / Discord";
-
-        explainer.innerHTML = `
-          <div class="text-indigo-300 font-bold flex items-center space-x-1.5">
-            <span>● ProxyIP 反代旁路中继机制：</span>
-          </div>
-          <p class="text-slate-400">目标网站属于 Cloudflare 托管。为避免触发内部死循环自卫机制，Worker 将流量移交给纯数字 ProxyIP 中继小哥，以普通外部访客身份进入目标，彻底告别 Error 1000 回环！</p>
-        `;
-      }
-    }
-
-    // 3. 骨干智选卡片交互
-    function selectColoCard(colo) {
-      const sjc = document.getElementById('card-sjc');
-      const hkg = document.getElementById('card-hkg');
-      const nrt = document.getElementById('card-nrt');
-
-      sjc.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4";
-      hkg.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4";
-      nrt.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4";
-
-      if (colo === 'sjc') {
-        sjc.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-cyan-500/40 bg-cyan-500/[0.03]";
-      } else if (colo === 'hkg') {
-        hkg.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-amber-500/40 bg-amber-500/[0.03]";
-      } else {
-        nrt.className = "p-6 rounded-3xl glow-card cursor-pointer space-y-4 border-rose-500/40 bg-rose-500/[0.03]";
-      }
-    }
-
-    // 4. 终端选项卡与复制
+    // 2. 终端选项卡与复制代码
     let activeTerm = 'mac';
     function setTerminalTab(tab) {
       activeTerm = tab;
