@@ -821,8 +821,17 @@ def get_ip_intel(ip_str):
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):
+        url = urlparse(self.path)
+        path = url.path
+        ctype = "text/html; charset=utf-8"
+        if path.endswith(".js"):
+            ctype = "application/javascript; charset=utf-8"
+        elif path.endswith(".json"):
+            ctype = "application/json; charset=utf-8"
+        elif path.endswith(".svg"):
+            ctype = "image/svg+xml"
         self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Type", ctype)
         self.end_headers()
 
     def do_GET(self):
@@ -858,6 +867,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._serve_manifest()
         elif path == "/icon.svg":
             self._serve_icon()
+        elif path == "/tailwind.js":
+            self._serve_tailwind()
         else:
             self.send_error(404, "Not Found")
 
@@ -946,6 +957,21 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(content)
+
+    def _serve_tailwind(self):
+        js_file = os.path.join(BASE_DIR, "tailwind.js")
+        if os.path.exists(js_file):
+            with open(js_file, "rb") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/javascript; charset=utf-8")
+            self.send_header("Content-Length", str(len(content)))
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(content)
+        else:
+            self.send_error(404, "tailwind.js not found")
 
     def _send_json(self, data):
         content = json.dumps(data, ensure_ascii=False).encode('utf-8')

@@ -11,14 +11,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="CF-Pulse">
   <meta name="theme-color" content="#f59e0b">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 优先加载本地打包的 Tailwind 核心引擎，0 延迟秒开且 100% 离线支持，彻底解决 GFW 阻断导致网页不成型问题 -->
+  <script src="/tailwind.js" onerror="this.onerror=null;this.src='https://cdn.tailwindcss.com';"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", Roboto, sans-serif;
     }
     .mono {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
     ::-webkit-scrollbar {
       width: 6px;
