@@ -830,6 +830,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             ctype = "application/json; charset=utf-8"
         elif path.endswith(".svg"):
             ctype = "image/svg+xml"
+        elif path.endswith(".png"):
+            ctype = "image/png"
         self.send_response(200)
         self.send_header("Content-Type", ctype)
         self.end_headers()
@@ -867,6 +869,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._serve_manifest()
         elif path == "/icon.svg":
             self._serve_icon()
+        elif path == "/avatar.png":
+            self._serve_avatar()
         elif path == "/tailwind.js":
             self._serve_tailwind()
         else:
@@ -956,7 +960,20 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(content)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(content)
+    def _serve_avatar(self):
+        img_file = os.path.join(BASE_DIR, "avatar.png")
+        if os.path.exists(img_file):
+            with open(img_file, "rb") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", str(len(content)))
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(content)
+        else:
+            self.send_error(404, "avatar.png not found")
 
     def _serve_tailwind(self):
         js_file = os.path.join(BASE_DIR, "tailwind.js")
